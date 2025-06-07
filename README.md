@@ -6,6 +6,8 @@
     phpのserialize関数でシリアライズされた文字列（元のデータは、ネストした連想配列と、配列と、適当なクラスのオブジェクトを持つ）から、astを生成するgoプログラムを教えてください。
     ```
 
+    - 一発で動かない & 微調整の必要があったため手を入れた箇所あり
+
 - PHP serialize()
     - https://www.php.net/manual/ja/function.serialize.php
 
