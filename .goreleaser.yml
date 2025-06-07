@@ -1,0 +1,73 @@
+version: 2
+project_name: ps2
+env:
+  - GO111MODULE=on
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - main: ./
+    binary: ps2
+    ldflags:
+      - -s -w
+      - -X main.Version={{.Version}}
+      - -X main.Revision={{.ShortCommit}}
+    goos:
+      - darwin
+      - windows
+    env:
+      - CGO_ENABLED=0
+  - id: ps2-linux
+    main: ./
+    binary: ps2
+    ldflags:
+      - -s -w
+      - -X main.Version={{.Version}}
+      - -X main.Revision={{.ShortCommit}}
+    goos:
+      - linux
+    env:
+      - CGO_ENABLED=0
+archives:
+  - name_template: '{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}'
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - LICENSE
+      - CREDITS
+release:
+  prerelease: auto
+brews:
+  - repository:
+      owner: ddddddO
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/ddddddO/ps2"
+    description: "🎮 phP Serialize() To xxxx (e.g. JSON)"
+    license: "BSD-2-Clause"
+# scoops:
+#   - repository:
+#       owner: ddddddO
+#       name: scoop-bucket
+#       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+#     url_template: "https://github.com/ddddddO/ps2/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+#     homepage: "https://github.com/ddddddO/ps2"
+#     description: "🎮 phP Serialize() To xxxx (e.g. JSON)"
+#     license: "BSD-2-Clause"
+# nfpms:
+#   - id: ps2-nfpms
+#     file_name_template: "{{ .ProjectName }}_{{ .Version }}-1_{{ .Arch }}"
+#     builds:
+#       - ps2-linux
+#     homepage: https://github.com/ddddddO/ps2
+#     maintainer: ddddddO <lbfdeatq@gmail.com>
+#     description: "🎮 phP Serialize() To xxxx (e.g. JSON)"
+#     license: BSD-2-Clause
+#     formats:
+#       - deb
+#       - rpm
+#       - apk
+#     bindir: /usr/bin
+#     epoch: 1
