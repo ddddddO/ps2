@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"sort"
 	"strconv"
@@ -13,166 +14,52 @@ import (
 	"unicode/utf8" // UTF-8文字の処理用
 )
 
-// Represents a node in the conceptual AST.
-// 概念的なASTのノードを表す構造体
-type ASTNode struct {
-	Type      string      // 例: "array", "object", "string", "int", "bool", "null"
-	Value     interface{} // ノードの実際の値 (文字列、数値、マップ、スライスなど)
-	Children  []*ASTNode  // 子ノード (配列やオブジェクトの場合)
-	Key       interface{} // 親が配列/オブジェクトの場合のキー (string or int)
-	PropName  string      // オブジェクトのプロパティ名の場合
-	ClassName string      // オブジェクトの場合のクラス名
+const (
+	base   = `printf '%s' < Data serialized by PHP serialize function > | ps2`
+	sample = `printf '%s' 'a:9:{s:10:"string_val";s:27:"こんにちは、世界！";s:7:"int_val";i:123;s:9:"bool_true";b:1;s:10:"bool_false";b:0;s:8:"null_val";N;s:9:"float_val";d:3.14159;s:18:"nested_assoc_array";a:3:{s:4:"name";s:12:"Go Developer";s:7:"details";a:2:{s:3:"age";i:30;s:4:"city";s:8:"Kawasaki";}s:7:"hobbies";a:3:{i:0;s:6:"coding";i:1;s:7:"reading";i:2;s:6:"hiking";}}s:13:"indexed_array";a:5:{i:0;s:9:"りんご";i:1;s:9:"バナナ";i:2;s:12:"チェリー";i:3;i:100;i:4;b:1;}s:15:"object_instance";O:8:"MyObject":3:{s:10:"publicProp";s:15:"パブリック";s:16:"*protectedProp";i:456;s:19:"MyObjectprivateProp";a:1:{s:3:"key";s:5:"value";}}}' | ps2`
+)
+
+func main() {
+	flag.Usage = func() {
+		fmt.Fprintf(os.Stderr, "Usage of %s is: %s\n", os.Args[0], base)
+		fmt.Fprintf(os.Stderr, "Here's a quick example you can try:\n\n")
+		fmt.Fprintf(os.Stderr, "%s\n\n", sample)
+		flag.PrintDefaults()
+	}
+	flag.Parse()
+
+	output, err := run(os.Stdin)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+	fmt.Println(output)
 }
 
-// JSON出力用の構造体。ASTNodeの情報をJSONにマッピングする。
-// Represents a JSON-friendly version of ASTNode for output.
-type JSONNode struct {
-	Type      string      `json:"type"`                 // ノードの型
-	Value     interface{} `json:"value,omitempty"`      // プリミティブな値、または配列/オブジェクトの実際の値（マップやスライス）
-	ClassName string      `json:"class_name,omitempty"` // オブジェクトの場合のクラス名
-	Key       interface{} `json:"key,omitempty"`        // 親が配列/オブジェクトの場合のキー (このノードが子ノードの場合)
-	PropName  string      `json:"prop_name,omitempty"`  // 親がオブジェクトの場合のプロパティ名 (このノードがプロパティの場合)
-	Children  []*JSONNode `json:"children,omitempty"`   // 子ノードのリスト (AST構造を維持するためのもの)
-}
-
-// Converts an ASTNode tree to a JSONNode tree.
-// この関数は、ASTNodeの構造をJSONNodeに変換し、特に配列の'Value'フィールドを
-// PHPのjson_encodeの挙動に合わせてJSON配列またはJSONオブジェクトに変換します。
-func astNodeToJSONNode(astNode *ASTNode) *JSONNode {
-	if astNode == nil {
-		return nil
+func run(input io.Reader) (string, error) {
+	scanner := bufio.NewScanner(input)
+	if !scanner.Scan() {
+		return "", fmt.Errorf("failed to scanner")
+	}
+	if err := scanner.Err(); err != nil {
+		return "", err
 	}
 
-	jsonNode := &JSONNode{
-		Type:      astNode.Type,
-		ClassName: astNode.ClassName,
-		Key:       astNode.Key,
-		PropName:  astNode.PropName,
+	phpSerializedString := scanner.Text()
+	parser := newPhpParser(phpSerializedString)
+	rootNode, err := parser.parseValue()
+	if err != nil {
+		return "", err
 	}
 
-	switch astNode.Type {
-	case "string", "int", "bool", "null", "float":
-		// プリミティブ型の場合、Valueを直接設定
-		jsonNode.Value = astNode.Value
-	case "reference":
-		// 参照型は現状ではプレースホルダーとして扱う
-		jsonNode.Value = "[[PHP_REFERENCE_PLACEHOLDER]]"
-	case "array":
-		phpMap := astNode.Value.(map[interface{}]interface{})
-
-		// PHP配列が純粋な数値インデックスの連続した配列であるかを判定
-		isSequentialArray := true
-		numKeys := len(phpMap)
-		if numKeys > 0 {
-			intKeys := make([]int, 0, numKeys)
-			for k := range phpMap {
-				if intKey, ok := k.(int); ok {
-					intKeys = append(intKeys, intKey)
-				} else {
-					isSequentialArray = false // 整数以外のキーが存在する
-					break
-				}
-			}
-
-			if isSequentialArray { // 全てのキーが整数である場合のみ、連続性をチェック
-				sort.Ints(intKeys) // キーをソート
-				for i := 0; i < numKeys; i++ {
-					if intKeys[i] != i {
-						isSequentialArray = false // キーが0から連続していない
-						break
-					}
-				}
-			}
-		} else {
-			// 空の配列はJSON配列として扱う
-			isSequentialArray = true
-		}
-
-		if isSequentialArray {
-			// 数値インデックスの連続した配列の場合、JSON配列（Goのスライス）に変換
-			jsonArray := make([]interface{}, numKeys)
-			for i := 0; i < numKeys; i++ {
-				// 該当する子ASTNodeを見つけて、その値を再帰的にJSONValueに変換
-				var childAST *ASTNode
-				for _, child := range astNode.Children {
-					if child.Key != nil {
-						if k, ok := child.Key.(int); ok && k == i {
-							childAST = child
-							break
-						}
-					}
-				}
-				if childAST != nil {
-					// Recursively convert the child's value to its appropriate JSON representation.
-					jsonArray[i] = astNodeToJSONNode(childAST).Value
-				} else {
-					// Fallback: child ASTNodeが見つからない場合は、生の値をそのまま使用（ただし、複雑な型の場合再帰的にならない）
-					jsonArray[i] = phpMap[i]
-				}
-			}
-			jsonNode.Value = jsonArray
-		} else {
-			// 連想配列、または非連続な数値キーを持つ配列の場合、JSONオブジェクト（Goのmap[string]interface{}）に変換
-			jsonMap := make(map[string]interface{})
-			for k, v := range phpMap {
-				var jsonKey string
-				if keyStr, ok := k.(string); ok {
-					jsonKey = keyStr
-				} else if keyInt, ok := k.(int); ok {
-					jsonKey = fmt.Sprintf("%d", keyInt) // 整数キーはJSONオブジェクトのキーとして文字列に変換
-				} else {
-					jsonKey = fmt.Sprintf("%v", k) // その他の型のキーは文字列に変換
-				}
-
-				// 該当する子ASTNodeを見つけて、その値を再帰的にJSONValueに変換
-				var childAST *ASTNode
-				for _, child := range astNode.Children {
-					if child.Key == k {
-						childAST = child
-						break
-					}
-				}
-				if childAST != nil {
-					jsonMap[jsonKey] = astNodeToJSONNode(childAST).Value
-				} else {
-					jsonMap[jsonKey] = v
-				}
-			}
-			jsonNode.Value = jsonMap
-		}
-	case "object":
-		// オブジェクトの場合、Goのmap[string]interface{}に変換（プロパティ名は既に文字列）
-		phpObjectMap := astNode.Value.(map[string]interface{})
-		jsonMap := make(map[string]interface{})
-		for k := range phpObjectMap { // 元のキーをイテレート
-			jsonKey := k // プロパティ名は既に文字列
-
-			// 該当する子ASTNodeを見つけて、その値を再帰的にJSONValueに変換
-			var childAST *ASTNode
-			for _, child := range astNode.Children {
-				if child.PropName == k {
-					childAST = child
-					break
-				}
-			}
-			if childAST != nil {
-				jsonMap[jsonKey] = astNodeToJSONNode(childAST).Value
-			} else {
-				jsonMap[jsonKey] = phpObjectMap[k]
-			}
-		}
-		jsonNode.Value = jsonMap
+	jsonRootNode := astNodeToJSONNode(rootNode)
+	jsonRootNode.Children = nil // Children を出力しないようにするため
+	jsonData, err := json.MarshalIndent(jsonRootNode, "", "  ")
+	if err != nil {
+		return "", err
 	}
 
-	// JSONNodeの'Children'フィールドはAST構造そのものを表すため、常に再帰的に構築する
-	if len(astNode.Children) > 0 {
-		jsonNode.Children = make([]*JSONNode, len(astNode.Children))
-		for i, child := range astNode.Children {
-			jsonNode.Children[i] = astNodeToJSONNode(child) // 子ノードのJSONNodeを再帰的に構築
-		}
-	}
-
-	return jsonNode
+	return string(jsonData), nil
 }
 
 // Custom parser struct to manage input string and current position.
@@ -220,6 +107,69 @@ func (p *phpParser) expectChar(expected rune) error {
 		return fmt.Errorf("expected '%c', but got '%c' at position %d", expected, ch, p.pos-1)
 	}
 	return nil
+}
+
+// Represents a node in the conceptual AST.
+// 概念的なASTのノードを表す構造体
+type ASTNode struct {
+	Type      string      // 例: "array", "object", "string", "int", "bool", "null"
+	Value     interface{} // ノードの実際の値 (文字列、数値、マップ、スライスなど)
+	Children  []*ASTNode  // 子ノード (配列やオブジェクトの場合)
+	Key       interface{} // 親が配列/オブジェクトの場合のキー (string or int)
+	PropName  string      // オブジェクトのプロパティ名の場合
+	ClassName string      // オブジェクトの場合のクラス名
+}
+
+// Parses a PHP serialized value based on its type prefix.
+// 型プレフィックスに基づいてPHPのシリアライズされた値を解析
+func (p *phpParser) parseValue() (*ASTNode, error) {
+	if p.pos >= len(p.input) {
+		return nil, errors.New("unexpected end of input when parsing value type")
+	}
+
+	ch := p.input[p.pos]
+	p.pos++ // Consume the type character
+	switch ch {
+	case 's':
+		p.pos-- // Go back to 's' for parseString
+		return p.parseString()
+	case 'i':
+		p.pos-- // Go back to 'i' for parseInteger
+		return p.parseInteger()
+	case 'b':
+		p.pos-- // Go back to 'b' for parseBoolean
+		return p.parseBoolean()
+	case 'N':
+		p.pos-- // Go back to 'N' for parseNull
+		return p.parseNull()
+	case 'a':
+		p.pos-- // Go back to 'a' for parseArray
+		return p.parseArray()
+	case 'O':
+		p.pos-- // Go back to 'O' for parseObject
+		return p.parseObject()
+	case 'd':
+		p.pos-- // Go back to 'd' for parseFloat
+		return p.parseFloat()
+	case 'R': // Reference, currently not fully supported by this parser for deep parsing
+		// PHP references (R:N;) point to a previously parsed element.
+		// For simplicity, we'll just consume it and return a placeholder.
+		// For a full implementation, you'd need to store parsed objects in a map
+		// and retrieve them here.
+		if err := p.expectChar(':'); err != nil {
+			return nil, err
+		}
+		_, err := p.parseNumberString() // Reference ID
+		if err != nil {
+			return nil, err
+		}
+		if err := p.expectChar(';'); err != nil {
+			return nil, err
+		}
+		return &ASTNode{Type: "reference", Value: nil}, nil // Placeholder
+	default:
+		return nil, fmt.Errorf("unknown PHP serialized type '%c' at position %d", ch, p.pos-1)
+	}
 }
 
 // Parses an integer value (e.g., "123" from i:123;).
@@ -540,91 +490,153 @@ func (p *phpParser) parseObject() (*ASTNode, error) {
 	return node, nil
 }
 
-// Parses a PHP serialized value based on its type prefix.
-// 型プレフィックスに基づいてPHPのシリアライズされた値を解析
-func (p *phpParser) parseValue() (*ASTNode, error) {
-	if p.pos >= len(p.input) {
-		return nil, errors.New("unexpected end of input when parsing value type")
-	}
-
-	ch := p.input[p.pos]
-	p.pos++ // Consume the type character
-	switch ch {
-	case 's':
-		p.pos-- // Go back to 's' for parseString
-		return p.parseString()
-	case 'i':
-		p.pos-- // Go back to 'i' for parseInteger
-		return p.parseInteger()
-	case 'b':
-		p.pos-- // Go back to 'b' for parseBoolean
-		return p.parseBoolean()
-	case 'N':
-		p.pos-- // Go back to 'N' for parseNull
-		return p.parseNull()
-	case 'a':
-		p.pos-- // Go back to 'a' for parseArray
-		return p.parseArray()
-	case 'O':
-		p.pos-- // Go back to 'O' for parseObject
-		return p.parseObject()
-	case 'd':
-		p.pos-- // Go back to 'd' for parseFloat
-		return p.parseFloat()
-	case 'R': // Reference, currently not fully supported by this parser for deep parsing
-		// PHP references (R:N;) point to a previously parsed element.
-		// For simplicity, we'll just consume it and return a placeholder.
-		// For a full implementation, you'd need to store parsed objects in a map
-		// and retrieve them here.
-		if err := p.expectChar(':'); err != nil {
-			return nil, err
-		}
-		_, err := p.parseNumberString() // Reference ID
-		if err != nil {
-			return nil, err
-		}
-		if err := p.expectChar(';'); err != nil {
-			return nil, err
-		}
-		return &ASTNode{Type: "reference", Value: nil}, nil // Placeholder
-	default:
-		return nil, fmt.Errorf("unknown PHP serialized type '%c' at position %d", ch, p.pos-1)
-	}
+// JSON出力用の構造体。ASTNodeの情報をJSONにマッピングする。
+// Represents a JSON-friendly version of ASTNode for output.
+type JSONNode struct {
+	Type      string      `json:"type"`                 // ノードの型
+	Value     interface{} `json:"value,omitempty"`      // プリミティブな値、または配列/オブジェクトの実際の値（マップやスライス）
+	ClassName string      `json:"class_name,omitempty"` // オブジェクトの場合のクラス名
+	Key       interface{} `json:"key,omitempty"`        // 親が配列/オブジェクトの場合のキー (このノードが子ノードの場合)
+	PropName  string      `json:"prop_name,omitempty"`  // 親がオブジェクトの場合のプロパティ名 (このノードがプロパティの場合)
+	Children  []*JSONNode `json:"children,omitempty"`   // 子ノードのリスト (AST構造を維持するためのもの)
 }
 
-const (
-	base   = `printf '%s' < Data serialized by PHP serialize function > | ps2`
-	sample = `printf '%s' 'a:9:{s:10:"string_val";s:27:"こんにちは、世界！";s:7:"int_val";i:123;s:9:"bool_true";b:1;s:10:"bool_false";b:0;s:8:"null_val";N;s:9:"float_val";d:3.14159;s:18:"nested_assoc_array";a:3:{s:4:"name";s:12:"Go Developer";s:7:"details";a:2:{s:3:"age";i:30;s:4:"city";s:8:"Kawasaki";}s:7:"hobbies";a:3:{i:0;s:6:"coding";i:1;s:7:"reading";i:2;s:6:"hiking";}}s:13:"indexed_array";a:5:{i:0;s:9:"りんご";i:1;s:9:"バナナ";i:2;s:12:"チェリー";i:3;i:100;i:4;b:1;}s:15:"object_instance";O:8:"MyObject":3:{s:10:"publicProp";s:15:"パブリック";s:16:"*protectedProp";i:456;s:19:"MyObjectprivateProp";a:1:{s:3:"key";s:5:"value";}}}' | ps2`
-)
-
-func main() {
-	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage of %s is: %s\n", os.Args[0], base)
-		fmt.Fprintf(os.Stderr, "Here's a quick example you can try:\n\n")
-		fmt.Fprintf(os.Stderr, "%s\n\n", sample)
-		flag.PrintDefaults()
-	}
-	flag.Parse()
-
-	scanner := bufio.NewScanner(os.Stdin)
-	if !scanner.Scan() {
-		return
-	}
-	phpSerializedString := scanner.Text()
-
-	parser := newPhpParser(phpSerializedString)
-	rootNode, err := parser.parseValue()
-	if err != nil {
-		fmt.Printf("Error parsing: %v\n", err)
-		return
+// Converts an ASTNode tree to a JSONNode tree.
+// この関数は、ASTNodeの構造をJSONNodeに変換し、特に配列の'Value'フィールドを
+// PHPのjson_encodeの挙動に合わせてJSON配列またはJSONオブジェクトに変換します。
+func astNodeToJSONNode(astNode *ASTNode) *JSONNode {
+	if astNode == nil {
+		return nil
 	}
 
-	jsonRootNode := astNodeToJSONNode(rootNode)
-	jsonRootNode.Children = nil // Children を出力しないようにするため
-	jsonData, err := json.MarshalIndent(jsonRootNode, "", "  ")
-	if err != nil {
-		fmt.Printf("Error marshaling to JSON: %v\n", err)
-		return
+	jsonNode := &JSONNode{
+		Type:      astNode.Type,
+		ClassName: astNode.ClassName,
+		Key:       astNode.Key,
+		PropName:  astNode.PropName,
 	}
-	fmt.Println(string(jsonData))
+
+	switch astNode.Type {
+	case "string", "int", "bool", "null", "float":
+		// プリミティブ型の場合、Valueを直接設定
+		jsonNode.Value = astNode.Value
+	case "reference":
+		// 参照型は現状ではプレースホルダーとして扱う
+		jsonNode.Value = "[[PHP_REFERENCE_PLACEHOLDER]]"
+	case "array":
+		phpMap := astNode.Value.(map[interface{}]interface{})
+
+		// PHP配列が純粋な数値インデックスの連続した配列であるかを判定
+		isSequentialArray := true
+		numKeys := len(phpMap)
+		if numKeys > 0 {
+			intKeys := make([]int, 0, numKeys)
+			for k := range phpMap {
+				if intKey, ok := k.(int); ok {
+					intKeys = append(intKeys, intKey)
+				} else {
+					isSequentialArray = false // 整数以外のキーが存在する
+					break
+				}
+			}
+
+			if isSequentialArray { // 全てのキーが整数である場合のみ、連続性をチェック
+				sort.Ints(intKeys) // キーをソート
+				for i := 0; i < numKeys; i++ {
+					if intKeys[i] != i {
+						isSequentialArray = false // キーが0から連続していない
+						break
+					}
+				}
+			}
+		} else {
+			// 空の配列はJSON配列として扱う
+			isSequentialArray = true
+		}
+
+		if isSequentialArray {
+			// 数値インデックスの連続した配列の場合、JSON配列（Goのスライス）に変換
+			jsonArray := make([]interface{}, numKeys)
+			for i := 0; i < numKeys; i++ {
+				// 該当する子ASTNodeを見つけて、その値を再帰的にJSONValueに変換
+				var childAST *ASTNode
+				for _, child := range astNode.Children {
+					if child.Key != nil {
+						if k, ok := child.Key.(int); ok && k == i {
+							childAST = child
+							break
+						}
+					}
+				}
+				if childAST != nil {
+					// Recursively convert the child's value to its appropriate JSON representation.
+					jsonArray[i] = astNodeToJSONNode(childAST).Value
+				} else {
+					// Fallback: child ASTNodeが見つからない場合は、生の値をそのまま使用（ただし、複雑な型の場合再帰的にならない）
+					jsonArray[i] = phpMap[i]
+				}
+			}
+			jsonNode.Value = jsonArray
+		} else {
+			// 連想配列、または非連続な数値キーを持つ配列の場合、JSONオブジェクト（Goのmap[string]interface{}）に変換
+			jsonMap := make(map[string]interface{})
+			for k, v := range phpMap {
+				var jsonKey string
+				if keyStr, ok := k.(string); ok {
+					jsonKey = keyStr
+				} else if keyInt, ok := k.(int); ok {
+					jsonKey = fmt.Sprintf("%d", keyInt) // 整数キーはJSONオブジェクトのキーとして文字列に変換
+				} else {
+					jsonKey = fmt.Sprintf("%v", k) // その他の型のキーは文字列に変換
+				}
+
+				// 該当する子ASTNodeを見つけて、その値を再帰的にJSONValueに変換
+				var childAST *ASTNode
+				for _, child := range astNode.Children {
+					if child.Key == k {
+						childAST = child
+						break
+					}
+				}
+				if childAST != nil {
+					jsonMap[jsonKey] = astNodeToJSONNode(childAST).Value
+				} else {
+					jsonMap[jsonKey] = v
+				}
+			}
+			jsonNode.Value = jsonMap
+		}
+	case "object":
+		// オブジェクトの場合、Goのmap[string]interface{}に変換（プロパティ名は既に文字列）
+		phpObjectMap := astNode.Value.(map[string]interface{})
+		jsonMap := make(map[string]interface{})
+		for k := range phpObjectMap { // 元のキーをイテレート
+			jsonKey := k // プロパティ名は既に文字列
+
+			// 該当する子ASTNodeを見つけて、その値を再帰的にJSONValueに変換
+			var childAST *ASTNode
+			for _, child := range astNode.Children {
+				if child.PropName == k {
+					childAST = child
+					break
+				}
+			}
+			if childAST != nil {
+				jsonMap[jsonKey] = astNodeToJSONNode(childAST).Value
+			} else {
+				jsonMap[jsonKey] = phpObjectMap[k]
+			}
+		}
+		jsonNode.Value = jsonMap
+	}
+
+	// JSONNodeの'Children'フィールドはAST構造そのものを表すため、常に再帰的に構築する
+	if len(astNode.Children) > 0 {
+		jsonNode.Children = make([]*JSONNode, len(astNode.Children))
+		for i, child := range astNode.Children {
+			jsonNode.Children[i] = astNodeToJSONNode(child) // 子ノードのJSONNodeを再帰的に構築
+		}
+	}
+
+	return jsonNode
 }
