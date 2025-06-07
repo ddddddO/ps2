@@ -1,5 +1,5 @@
-# ps2
-🎮 PHP serialize() to xxxx (e.g. JSON)
+# 🎮 ps2
+phP Serialize() To xxxx (e.g. JSON)
 
 Converts data serialized by the PHP serialize function into some format (only JSON for now). 
 This may be useful if you want to convert the payload string stored in the Laravel job queue 👍 
