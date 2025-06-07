@@ -278,7 +278,7 @@ func (p *phpParser) parseString() (*ASTNode, error) {
 	}
 	val := p.input[start:end]
 
-	// ここだけ処理追加した
+	// 処理追加した。このあたりでバグあるかもしれない
 	// 「*」が先頭にある場合、*の前後はnullバイト(ref: https://www.php.net/manual/ja/function.serialize.php#refsect1-function.serialize-parameters の「注意」)
 	// ただ、シリアライズされた文字列をコピペしてターミナルに張り付けるとnullバイトが消えるので、その場合はnullバイト分を除くため、end-2する
 	if strings.HasPrefix(val, "*") {
@@ -286,11 +286,28 @@ func (p *phpParser) parseString() (*ASTNode, error) {
 		val = p.input[start:end]
 	}
 
+	if strings.HasPrefix(val, "�*") {
+		// �が3byte分なので、endを、3byte x 2 - 2 する
+		end = end + 3*2 - 2
+		val = p.input[start:end]
+	} else if strings.Contains(val, "�") {
+		cnt := strings.Count(val, "�")
+		end = end + 3*cnt - cnt
+		val = p.input[start:end]
+	}
+
 	p.pos = end // posを正確に更新
 
-	// fmt.Printf("👺%s\n", val)
+	if r, err := p.peekChar(); err == nil && r != '"' {
+		// private でクラスの変数の場合、[NULLバイト]App\Xxxx[Nullバイト]isFlag みたいに、Nullバイトが2つ分入って進みすぎてしまう
+		// よくないと思うけど、ここで次の文字が意図したものでなければ、Nullバイトが含まれていたとみなして、endから-2する
+		end -= 2
+		val = p.input[start:end]
+		p.pos = end
+	}
 
 	if err := p.expectChar('"'); err != nil {
+		fmt.Println("LLLLLL")
 		return nil, err
 	}
 	if err := p.expectChar(';'); err != nil {
@@ -495,14 +512,15 @@ func (p *phpParser) parseObject() (*ASTNode, error) {
 		}
 		propName := propNameNode.Value.(string)
 
+		// TODO: ちょっと以下のコメント通りでいいか要チェック
 		// PHP object properties can be public, protected, or private.
 		// Protected properties start with a null byte (0x00), then '*' then null byte.
 		// Private properties start with a null byte, then class name, then null byte.
 		// For simplicity, we just extract the name after null bytes if present.
 		// Public properties have no prefix.
 		cleanPropName := propName
-		if strings.HasPrefix(propName, "\x00") {
-			parts := strings.Split(propName, "\x00")
+		if strings.HasPrefix(propName, "�") {
+			parts := strings.Split(propName, "�")
 			if len(parts) >= 3 {
 				cleanPropName = parts[2] // Private: \x00ClassName\x00propName, Protected: \x00*\x00propName
 			}
