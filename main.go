@@ -307,7 +307,6 @@ func (p *phpParser) parseString() (*ASTNode, error) {
 	}
 
 	if err := p.expectChar('"'); err != nil {
-		fmt.Println("LLLLLL")
 		return nil, err
 	}
 	if err := p.expectChar(';'); err != nil {
