@@ -16,6 +16,19 @@ If you find any bugs, please create an issue or PR!
 - PHP serialize()
     - https://www.php.net/manual/ja/function.serialize.php
 
+## Install
+
+### Homebrew
+
+```console
+$ brew install ddddddO/tap/ps2
+```
+
+### Go
+```console
+$ go install github.com/ddddddO/ps2@latest
+```
+
 ## Usage
 
 - ※ `echo 'O:13:"App\UpdateJob....' | go run main.go` みたいに echo でやると、`\U`が削られる可能性があるため、`printf` 推奨
@@ -60,17 +73,4 @@ $ printf '%s' 'a:9:{s:10:"string_val";s:27:"こんにちは、世界！";s:7:"in
   }
 }
 $
-```
-
-## Install
-
-### Homebrew
-
-```console
-$ brew install ddddddO/tap/ps2
-```
-
-### Go
-```console
-$ go install github.com/ddddddO/ps2@latest
 ```
