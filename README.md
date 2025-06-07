@@ -16,6 +16,8 @@ If you find any bugs, please create an issue or PR!
 - PHP serialize()
     - https://www.php.net/manual/ja/function.serialize.php
 
+- It worked in the following environment: PHP 7.4.33 (cli) (built: May  9 2025 06:44:16) ( NTS )
+
 ## Install
 
 ### Homebrew
