@@ -38,14 +38,14 @@ func main() {
 
 func run(input io.Reader) (string, error) {
 	scanner := bufio.NewScanner(input)
-	if !scanner.Scan() {
-		return "", fmt.Errorf("failed to scanner")
+	phpSerializedString := ""
+	for scanner.Scan() {
+		phpSerializedString += scanner.Text()
 	}
 	if err := scanner.Err(); err != nil {
 		return "", err
 	}
 
-	phpSerializedString := scanner.Text()
 	parser := newPhpParser(phpSerializedString)
 	rootNode, err := parser.parseValue()
 	if err != nil {
