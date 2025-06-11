@@ -226,9 +226,11 @@ func (p *phpParser) parseString() (*ASTNode, error) {
 	// 処理追加した。このあたりでバグあるかもしれない
 	// 「*」が先頭にある場合、*の前後はnullバイト(ref: https://www.php.net/manual/ja/function.serialize.php#refsect1-function.serialize-parameters の「注意」)
 	// ただ、シリアライズされた文字列をコピペしてターミナルに張り付けるとnullバイトが消えるので、その場合はnullバイト分を除くため、end-2する
-	if strings.HasPrefix(val, "*") {
-		end -= 2
-		val = p.input[start:end]
+	if strings.HasPrefix(val, "*") && len(p.input) >= start {
+		if start < end-2 {
+			end -= 2
+			val = p.input[start:end]
+		}
 	}
 
 	if strings.HasPrefix(val, "�*") {
