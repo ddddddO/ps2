@@ -41,6 +41,7 @@ func TestRun(t *testing.T) {
 					`"*protectedProp": 456`,
 					`"MyObjectprivateProp": {`,
 					`"key": "value"`,
+					`"__class_name": "MyObject"`,
 					`"publicProp": "パブリック"`,
 				}
 				for _, w := range wants {
