@@ -446,6 +446,7 @@ func (p *phpParser) parseObject() (*ASTNode, error) {
 
 	node := &ASTNode{Type: "object", ClassName: className, Value: make(map[string]interface{})}
 	propertiesMap := make(map[string]interface{})
+	propertiesMap["__class_name"] = className
 
 	for i := 0; i < numProps; i++ {
 		// Property name is a string (s:N:"prop_name";)
@@ -493,12 +494,12 @@ func (p *phpParser) parseObject() (*ASTNode, error) {
 // JSON出力用の構造体。ASTNodeの情報をJSONにマッピングする。
 // Represents a JSON-friendly version of ASTNode for output.
 type JSONNode struct {
-	Type      string      `json:"type"`                 // ノードの型
-	Value     interface{} `json:"value,omitempty"`      // プリミティブな値、または配列/オブジェクトの実際の値（マップやスライス）
-	ClassName string      `json:"class_name,omitempty"` // オブジェクトの場合のクラス名
-	Key       interface{} `json:"key,omitempty"`        // 親が配列/オブジェクトの場合のキー (このノードが子ノードの場合)
-	PropName  string      `json:"prop_name,omitempty"`  // 親がオブジェクトの場合のプロパティ名 (このノードがプロパティの場合)
-	Children  []*JSONNode `json:"children,omitempty"`   // 子ノードのリスト (AST構造を維持するためのもの)
+	Type      string      `json:"type"`                   // ノードの型
+	Value     interface{} `json:"value,omitempty"`        // プリミティブな値、または配列/オブジェクトの実際の値（マップやスライス）
+	ClassName string      `json:"__class_name,omitempty"` // オブジェクトの場合のクラス名
+	Key       interface{} `json:"key,omitempty"`          // 親が配列/オブジェクトの場合のキー (このノードが子ノードの場合)
+	PropName  string      `json:"prop_name,omitempty"`    // 親がオブジェクトの場合のプロパティ名 (このノードがプロパティの場合)
+	Children  []*JSONNode `json:"children,omitempty"`     // 子ノードのリスト (AST構造を維持するためのもの)
 }
 
 // Converts an ASTNode tree to a JSONNode tree.

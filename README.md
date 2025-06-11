@@ -82,6 +82,7 @@ $ ps2 <<< 'a:9:{s:10:"string_val";s:27:"こんにちは、世界！";s:7:"int_va
       "MyObjectprivateProp": {
         "key": "value"
       },
+      "__class_name": "MyObject",
       "publicProp": "パブリック"
     },
     "string_val": "こんにちは、世界！"
