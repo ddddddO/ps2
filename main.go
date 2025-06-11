@@ -151,7 +151,7 @@ func (p *phpParser) parseValue() (*ASTNode, error) {
 	case 'd':
 		p.pos-- // Go back to 'd' for parseFloat
 		return p.parseFloat()
-	case 'R': // Reference, currently not fully supported by this parser for deep parsing
+	case 'R', 'r': // Reference, currently not fully supported by this parser for deep parsing
 		// PHP references (R:N;) point to a previously parsed element.
 		// For simplicity, we'll just consume it and return a placeholder.
 		// For a full implementation, you'd need to store parsed objects in a map
