@@ -6,7 +6,7 @@ before:
   hooks:
     - go mod tidy
 builds:
-  - main: ./
+  - main: ./cmd/ps2
     binary: ps2
     ldflags:
       - -s -w
@@ -18,7 +18,7 @@ builds:
     env:
       - CGO_ENABLED=0
   - id: ps2-linux
-    main: ./
+    main: ./cmd/ps2
     binary: ps2
     ldflags:
       - -s -w

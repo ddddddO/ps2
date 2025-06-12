@@ -1,8 +1,10 @@
-package main
+package ps2_test
 
 import (
 	"strings"
 	"testing"
+
+	"github.com/ddddddO/ps2"
 )
 
 func TestRun(t *testing.T) {
@@ -60,7 +62,7 @@ func TestRun(t *testing.T) {
 			t.Parallel()
 
 			input := strings.NewReader(tt.serialized)
-			got, err := run(input)
+			got, err := ps2.Run(input)
 			if err != nil {
 				t.Fatal(err)
 			}
