@@ -36,7 +36,7 @@ $ brew install ddddddO/tap/ps2
 
 ### Go
 ```console
-$ go install github.com/ddddddO/ps2@latest
+$ go install github.com/ddddddO/ps2/cmd/ps2@latest
 ```
 
 ## Usage
