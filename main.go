@@ -459,7 +459,7 @@ func (p *phpParser) parseObject() (*ASTNode, error) {
 		}
 		propName := propNameNode.Value.(string)
 
-		// TODO: ちょっと以下のコメント通りでいいか要チェック
+		// 厳密には else if ブロックのコメント
 		// PHP object properties can be public, protected, or private.
 		// Protected properties start with a null byte (0x00), then '*' then null byte.
 		// Private properties start with a null byte, then class name, then null byte.
@@ -468,6 +468,11 @@ func (p *phpParser) parseObject() (*ASTNode, error) {
 		cleanPropName := propName
 		if strings.HasPrefix(propName, "�") {
 			parts := strings.Split(propName, "�")
+			if len(parts) >= 3 {
+				cleanPropName = parts[2] // Private: �ClassName�propName, Protected: �*�propName
+			}
+		} else if strings.HasPrefix(propName, "\x00") {
+			parts := strings.Split(propName, "\x00")
 			if len(parts) >= 3 {
 				cleanPropName = parts[2] // Private: \x00ClassName\x00propName, Protected: \x00*\x00propName
 			}
