@@ -232,7 +232,6 @@ func (p *phpParser) parseString() (*ASTNode, error) {
 			val = p.input[start:end]
 		}
 	}
-
 	if strings.HasPrefix(val, "�*") {
 		// �が3byte分なので、endを、3byte x 2 - 2 する
 		end = end + 3*2 - 2
