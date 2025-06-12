@@ -53,7 +53,7 @@ func run(input io.Reader) (string, error) {
 	}
 
 	jsonRootNode := astNodeToJSONNode(rootNode)
-	jsonRootNode.Children = nil // Children を出力しないようにするため
+	// jsonRootNode.Children = nil
 	jsonData, err := json.MarshalIndent(jsonRootNode, "", "  ")
 	if err != nil {
 		return "", err
@@ -507,6 +507,10 @@ type JSONNode struct {
 	Key       interface{} `json:"key,omitempty"`          // 親が配列/オブジェクトの場合のキー (このノードが子ノードの場合)
 	PropName  string      `json:"prop_name,omitempty"`    // 親がオブジェクトの場合のプロパティ名 (このノードがプロパティの場合)
 	Children  []*JSONNode `json:"children,omitempty"`     // 子ノードのリスト (AST構造を維持するためのもの)
+}
+
+func (j *JSONNode) MarshalJSON() ([]byte, error) {
+	return json.Marshal(j.Value)
 }
 
 // Converts an ASTNode tree to a JSONNode tree.
