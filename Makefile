@@ -1,5 +1,5 @@
 test:
-	go test ./...
+	go test
 
 credit:
 	gocredits . > CREDITS

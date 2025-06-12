@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+ 
+<head prefix="og: https://ogp.me/ns#">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="phP Serialize() To xxxx (e.g. JSON)"/>
+  <!-- テーマカラー -->
+  <meta name="theme-color" content="#134e4a">
+  <!-- テーマカラー　モード指定 -->
+  <meta name="theme-color" content="#134e4a" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#134e4a" media="(prefers-color-scheme: dark)">
+
+  <meta property="og:url" content="https://ddddddo.github.io/ps2/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="ps2" />
+  <meta property="og:description" content="phP Serialize() To xxxx (e.g. JSON)" />
+  <meta property="og:site_name" content="ps2" />
+
+  <!-- favicon.svg -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📅</text></svg>">
+
+  <title>ps2</title>
+
+  <link href="toast.css" rel="stylesheet">
+  <script src="wasm_exec.js"></script>
+  <script src="main.js"></script>
+</head>
+<body>
+  <div>
+    <h1 class="text-3xl font-bold">
+      ps2<iframe src="https://ghbtns.com/github-btn.html?user=ddddddO&repo=ps2&type=star&count=true" frameborder="0" scrolling="0" width="160px" height="30px"></iframe>
+    </h1>
+    <p>Convert PHP serialized data to JSON 🐘...</p>
+  </div>
+
+  <div id="main">
+    <div>
+      <div>
+        <textarea id="input" style="width: 100%; height: 200px;"></textarea>
+      </div>
+      <div>
+        <button onClick="callPS2();" id="call">Run</button>
+        <button onClick="copyToClipboard();" id="copy">Copy</button>
+        <button onClick="clearInput();" id="copy">Clear</button>
+        <div id="toast"></div>
+      </div>
+    </div>
+
+    <div id="result"></div>
+  </div>
+
+  <script src="toast.js"></script>
+  <script>
+    // register service_worker.js
+    // if ('serviceWorker' in navigator) {
+    //   navigator.serviceWorker.register('./service_worker.js').then(function(registration) {
+    //     console.log('succeeded: ', registration.scope);
+    //   }).catch(function(err) {
+    //     console.log('failed: ', err);
+    //   });
+    // }
+  </script>
+</body>
+
+</html>
