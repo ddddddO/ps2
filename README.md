@@ -7,7 +7,8 @@
 
 phP Serialize() To xxxx (e.g. JSON)
 
-Web 👉 https://ddddddo.github.io/ps2/
+Web 👉 https://ddddddo.github.io/ps2/ </br>
+Conversion can be done offline as it is processed in Wasm.
 
 Converts data serialized by the PHP serialize function into some format (only JSON for now).</br>
 This may be useful if you want to convert the payload string stored in the Laravel job queue 👍 </br>
