@@ -1,4 +1,4 @@
-# 🎮 ps2
+# 🎮 PS2
 
 [![GitHub release](https://img.shields.io/github/release/ddddddO/ps2.svg?label=Release&color=darkcyan)](https://github.com/ddddddO/ps2/releases)
 [![codecov](https://codecov.io/gh/ddddddO/ps2/graph/badge.svg?token=6E0G81K2H0)](https://codecov.io/gh/ddddddO/ps2)
