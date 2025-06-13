@@ -37,7 +37,7 @@ func astNodeToJSONNode(astNode *ASTNode) *JSONNode {
 	}
 
 	switch astNode.Type {
-	case "string", "int", "bool", "null", "float":
+	case "string", "int", "bool", "null", "float", "enum":
 		// プリミティブ型の場合、Valueを直接設定
 		jsonNode.Value = astNode.Value
 	case "reference":
