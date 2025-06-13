@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"io"
-	// UTF-8文字の処理用
 )
 
 func Run(input io.Reader) (string, error) {
