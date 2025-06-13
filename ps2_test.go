@@ -73,6 +73,113 @@ func TestRun(t *testing.T) {
 				t.Errorf("\ngot: \n%s\n\nwant including: \n%s", got, want)
 			}
 		})
+	}
+}
 
+func TestRun_parts(t *testing.T) {
+	tests := map[string]struct {
+		serialized string
+		want       string
+	}{
+		"array(map)": {
+			serialized: `a:2:{s:4:"name";s:12:"Go Developer";s:2:"xx";i:123;}`,
+			want: `
+{
+  "name": "Go Developer",
+  "xx": 123
+}`,
+		},
+		"array(list)": {
+			serialized: `a:3:{i:0;s:6:"coding";i:1;s:7:"reading";i:2;s:6:"hiking";}`,
+			want: `
+[
+  "coding",
+  "reading",
+  "hiking"
+]`,
+		},
+		"string": {
+			serialized: `s:27:"こんにちは、世界！";`,
+			want:       `"こんにちは、世界！"`,
+		},
+		"enum": {
+			serialized: `E:15:"Status:Inactive";`,
+			want:       `"Status:Inactive"`,
+		},
+		"int": {
+			serialized: `i:123;`,
+			want:       `123`,
+		},
+		"float": {
+			serialized: `d:3.14159;`,
+			want:       `3.14159`,
+		},
+		"bool(false)": {
+			serialized: `b:0;`,
+			want:       `false`,
+		},
+		"bool(true)": {
+			serialized: `b:1;`,
+			want:       `true`,
+		},
+		"null": {
+			serialized: `N;`,
+			want:       `null`,
+		},
+		"object": {
+			serialized: `O:12:"SimpleObject":1:{s:4:"name";s:8:"Object A";}`,
+			want: `
+{
+  "__class_name": "SimpleObject",
+  "name": "Object A"
+}`,
+		},
+		"custom": {
+			serialized: `C:12:"SimpleObject":1:{s:4:"name";s:8:"Object A";}`,
+			want: `
+{
+  "__class_name": "SimpleObject",
+  "name": "Object A"
+}`,
+		},
+		"reference(object)": {
+			serialized: `a:2:{s:9:"first_obj";O:12:"SimpleObject":1:{s:4:"name";s:8:"Object A";}s:10:"second_obj";r:2;}`,
+			want: `
+{
+  "first_obj": {
+    "__class_name": "SimpleObject",
+    "name": "Object A"
+  },
+  "second_obj": "[[PHP_REFERENCE_PLACEHOLDER]]"
+}`,
+		},
+		// TODO: "reference(value)"
+		"reference(self)": {
+			serialized: `O:8:"MyObject":2:{s:4:"name";s:30:"自己参照オブジェクト";s:4:"self";r:1;}`,
+			want: `
+{
+  "__class_name": "MyObject",
+  "name": "自己参照オブジェクト",
+  "self": "[[PHP_REFERENCE_PLACEHOLDER]]"
+}`,
+		},
+	}
+
+	for name, tt := range tests {
+		tt := tt
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			input := strings.NewReader(tt.serialized)
+			got, err := ps2.Run(input)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			want := strings.TrimPrefix(tt.want, "\n")
+			if got != want {
+				t.Errorf("\ngot: \n%s\n\nwant: \n%s", got, want)
+			}
+		})
 	}
 }
