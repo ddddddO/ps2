@@ -62,6 +62,10 @@ $ ps2 <<< 'a:9:{s:10:"string_val";s:27:"こんにちは、世界！";s:7:"int_va
 {
   "bool_false": false,
   "bool_true": true,
+  "custom_object_instance": {
+    "__class_name": "CustomObj",
+    "prop": "xxxxx"
+  },
   "float_val": 3.14159,
   "indexed_array": [
     "りんご",
@@ -74,7 +78,7 @@ $ ps2 <<< 'a:9:{s:10:"string_val";s:27:"こんにちは、世界！";s:7:"int_va
   "nested_assoc_array": {
     "details": {
       "age": 30,
-      "city": "Kawasaki"
+      "status": "Status:Inactive"
     },
     "hobbies": [
       "coding",
