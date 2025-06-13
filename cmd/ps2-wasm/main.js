@@ -17,6 +17,18 @@ const clearInput = () => {
   document.getElementById("input").value = "";
 };
 
+const clearOutput = () => {
+  const elm = document.getElementById("redered_json");
+  if (elm !== null) {
+    elm.remove();
+  }
+}
+
+const clearFn = () => {
+  clearInput();
+  clearOutput();
+}
+
 const copyToClipboard = () => {
   const calender = document.getElementById("redered_json");
   if (calender === null) {
