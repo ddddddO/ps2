@@ -14,10 +14,24 @@ Web and CLI tool are available!</br>
 
 Converts data serialized by the PHP serialize function into some format (only JSON for now).</br>
 This may be useful if you want to convert the payload string stored in the Laravel job queue 👍 </br>
-If you find any bugs, please create an issue or PR!
+If you find a bug or have a request, please create issue or Pull Request!
 
 Web 👉 https://ddddddo.github.io/ps2/ </br>
 Conversion can be done offline as it is processed in Wasm.
+
+## Supported Types
+|-|Type|Note|
+|--|--|--|
+|⭕|`a:5;`||
+|⭕|`s:4:"xxxx";`||
+|⭕|`E:4:"xxxx";`||
+|⭕|`i:555`||
+|⭕|`d:3.14`||
+|⭕|`b:0` / `b:1`||
+|⭕|`N`||
+|⭕|`r:1` / `R:1`| filled with `[[PHP_REFERENCE_PLACEHOLDER]]` |
+|⭕|`O:3:"Obj":2:{...}`||
+|⭕|`C:3:"Csm":2:{...}`||
 
 ## Install
 

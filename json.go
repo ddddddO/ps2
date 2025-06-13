@@ -126,7 +126,7 @@ func astNodeToJSONNode(astNode *ASTNode) *JSONNode {
 			}
 			jsonNode.Value = jsonMap
 		}
-	case "object":
+	case "object", "custom":
 		// オブジェクトの場合、Goのmap[string]interface{}に変換（プロパティ名は既に文字列）
 		phpObjectMap := astNode.Value.(map[string]interface{})
 		jsonMap := make(map[string]interface{})
