@@ -74,40 +74,33 @@ func (p *phpParser) parseValue() (*ASTNode, error) {
 	}
 
 	ch := p.input[p.pos]
-	p.pos++ // Consume the type character
 	switch ch {
 	case 's':
-		p.pos-- // Go back to 's' for parseString
 		return p.parseString()
 	case 'i':
-		p.pos-- // Go back to 'i' for parseInteger
 		return p.parseInteger()
 	case 'b':
-		p.pos-- // Go back to 'b' for parseBoolean
 		return p.parseBoolean()
 	case 'N':
-		p.pos-- // Go back to 'N' for parseNull
 		return p.parseNull()
 	case 'a':
-		p.pos-- // Go back to 'a' for parseArray
 		return p.parseArray()
 	case 'O':
-		p.pos-- // Go back to 'O' for parseObject
 		return p.parseObject()
 	case 'C':
-		p.pos--
 		return p.parseCustom()
 	case 'd':
-		p.pos-- // Go back to 'd' for parseFloat
 		return p.parseFloat()
 	case 'E':
-		p.pos--
 		return p.parseEnum()
 	case 'R', 'r': // Reference, currently not fully supported by this parser for deep parsing
 		// PHP references (R:N;) point to a previously parsed element.
 		// For simplicity, we'll just consume it and return a placeholder.
 		// For a full implementation, you'd need to store parsed objects in a map
 		// and retrieve them here.
+		if _, err := p.nextChar(); err != nil {
+			return nil, err
+		}
 		if err := p.expectChar(':'); err != nil {
 			return nil, err
 		}
