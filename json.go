@@ -46,9 +46,15 @@ func astNodeToJSONNode(astNode *ASTNode) *JSONNode {
 		// FIXME: ちょっとここ大変で、↑みたいにREFERENCEされてたらそのデータを文字列として出すようにした
 
 		// 自己参照型は、それ自身のパースが終わってなくてValueがゼロ値となるよう?で、その場合は自己参照型と見做してプレースホルダを出力
-		// 自己参照型でなく、そもそもValueがゼロ値なreferenceの可能性はあるかもしれないので、プレースホルダと一緒にゼロ値も出力
-		// if astNode.Value == nil {
-		// 	jsonNode.Value = "[[PHP_SELF_REFERENCE or zero value: nil]]"
+		// 自己参照型でなく、そもそもValueがゼロ値なreferenceの可能性はあるかもしれない
+		if astNode.Value != nil {
+			switch m := astNode.Value.(type) {
+			case map[string]interface{}:
+				if len(m) == 0 {
+					jsonNode.Value = "[[MAYBE_PHP_SELF_REFERENCE_DATA]]"
+				}
+			}
+		}
 		// } else {
 		// 	switch m := astNode.Value.(type) {
 		// 	case map[string]interface{}:

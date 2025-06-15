@@ -29,7 +29,7 @@ Conversion can be done offline as it is processed in Wasm.
 |⭕|`d:3.14`||
 |⭕|`b:0` / `b:1`||
 |⭕|`N`||
-|⭕|`r:1` / `R:1`| filled with `[[PHP_REFERENCE_DATA: <actual referenced unserialized data>]]` |
+|⭕|`r:1` / `R:1`| filled with `[[PHP_REFERENCE_DATA: <actual referenced unserialized data>]]`<br>or `[[MAYBE_PHP_SELF_REFERENCE_DATA]]` |
 |⭕|`O:3:"Obj":2:{...}`||
 |⭕|`C:3:"Csm":2:{...}`||
 
