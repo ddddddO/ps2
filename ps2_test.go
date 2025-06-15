@@ -50,7 +50,7 @@ func TestRun(t *testing.T) {
 					`"nullValue": null`,
 					`"parent": null`,
 					`"publicProp": "共通オブジェクト"`,
-					`"sharedObjectRef2": "[[PHP_REFERENCE_PLACEHOLDER]]"`,
+					`"sharedObjectRef2": "[[PHP_REFERENCE_DATA: map[*protectedProp:map[shared:true] MySimpleClassprivateProp:500 __class_name:MySimpleClass nestedArrayData:map[] nullValue:\u003cnil\u003e parent:\u003cnil\u003e publicProp:共通オブジェクト]]]"`,
 					`"sharedStringRef1": "共有される文字列データ"`,
 					`"sharedStringRef2": "共有される文字列データ"`,
 					`"statusEnum": "Status:Active"`,
@@ -200,17 +200,18 @@ func TestRun_parts(t *testing.T) {
     "__class_name": "SimpleObject",
     "name": "Object A"
   },
-  "second_obj": "[[PHP_REFERENCE_PLACEHOLDER]]"
+  "second_obj": "[[PHP_REFERENCE_DATA: map[__class_name:SimpleObject name:Object A]]]"
 }`,
 		},
-		// TODO: "reference(value)"
+		// TODO: "reference(value)" のケース
+		// TODO: 以下、自己参照のケースは、ゼロ値になるっぽいからそれ判定してMAYBE_SELF_REFERENCEみたいな文字列出すのいいかも
 		"reference(self)": {
 			serialized: `O:8:"MyObject":2:{s:4:"name";s:30:"自己参照オブジェクト";s:4:"self";r:1;}`,
 			want: `
 {
   "__class_name": "MyObject",
   "name": "自己参照オブジェクト",
-  "self": "[[PHP_REFERENCE_PLACEHOLDER]]"
+  "self": "[[PHP_REFERENCE_DATA: map[]]]"
 }`,
 		},
 	}

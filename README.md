@@ -29,7 +29,7 @@ Conversion can be done offline as it is processed in Wasm.
 |⭕|`d:3.14`||
 |⭕|`b:0` / `b:1`||
 |⭕|`N`||
-|⭕|`r:1` / `R:1`| filled with `[[PHP_REFERENCE_PLACEHOLDER]]` |
+|⭕|`r:1` / `R:1`| filled with `[[PHP_REFERENCE_DATA: <actual referenced unserialized data>]]` |
 |⭕|`O:3:"Obj":2:{...}`||
 |⭕|`C:3:"Csm":2:{...}`||
 
@@ -58,45 +58,53 @@ $ ps2 <<< '< Data serialized by PHP serialize function >'
 Example:
 
 ```console
-$ ps2 <<< 'a:10:{s:10:"string_val";s:27:"こんにちは、世界！";s:7:"int_val";i:123;s:9:"bool_true";b:1;s:10:"bool_false";b:0;s:8:"null_val";N;s:9:"float_val";d:3.14159;s:18:"nested_assoc_array";a:3:{s:4:"name";s:12:"Go Developer";s:7:"details";a:2:{s:3:"age";i:30;s:6:"status";E:15:"Status:Inactive";}s:7:"hobbies";a:3:{i:0;s:6:"coding";i:1;s:7:"reading";i:2;s:6:"hiking";}}s:13:"indexed_array";a:5:{i:0;s:9:"りんご";i:1;s:9:"バナナ";i:2;s:12:"チェリー";i:3;i:100;i:4;b:1;}s:15:"object_instance";O:8:"MyObject":3:{s:10:"publicProp";s:15:"パブリック";s:16:"*protectedProp";i:456;s:19:"MyObjectprivateProp";a:1:{s:3:"key";s:5:"value";}}s:22:"custom_object_instance";O:9:"CustomObj":1:{s:4:"prop";s:5:"xxxxx";}}'
+$ ps2 <<< 'O:13:"MySimpleClass":17:{s:10:"publicProp";s:16:"Top Level Object";s:26:"MySimpleClassprivateProp";i:999;s:16:"*protectedProp";a:3:{s:10:"assoc_key1";s:12:"assoc_value1";s:10:"assoc_key2";i:789;s:17:"deep_nested_array";a:2:{s:9:"sub_key_x";s:11:"sub_value_x";s:9:"sub_key_y";d:12.34;}}s:6:"parent";N;s:15:"nestedArrayData";a:5:{i:0;s:6:"Item A";i:1;s:6:"Item B";i:2;s:6:"Item C";i:3;i:10;i:4;b:0;}s:16:"sharedStringRef1";s:33:"共有される文字列データ";s:16:"sharedStringRef2";s:33:"共有される文字列データ";s:16:"sharedObjectRef1";O:13:"MySimpleClass":6:{s:10:"publicProp";s:24:"共通オブジェクト";s:26:"MySimpleClassprivateProp";i:500;s:16:"*protectedProp";a:1:{s:6:"shared";b:1;}s:6:"parent";N;s:15:"nestedArrayData";a:0:{}s:9:"nullValue";N;}s:16:"sharedObjectRef2";r:19;s:21:"customSerializableObj";O:20:"MyCustomSerializable":2:{s:1:"s";s:36:"オブジェクト内のカスタム";s:1:"n";i:777;}s:12:"userRoleEnum";E:15:"UserRole:Editor";s:10:"statusEnum";E:13:"Status:Active";s:9:"nullValue";N;s:11:"booleanTrue";b:1;s:10:"floatValue";d:45.67;s:12:"integerValue";i:123;s:14:"japaneseString";s:36:"これは日本語の文字列です";'
 {
-  "bool_false": false,
-  "bool_true": true,
-  "custom_object_instance": {
-    "__class_name": "CustomObj",
-    "prop": "xxxxx"
+  "*protectedProp": {
+    "assoc_key1": "assoc_value1",
+    "assoc_key2": 789,
+    "deep_nested_array": {
+      "sub_key_x": "sub_value_x",
+      "sub_key_y": 12.34
+    }
   },
-  "float_val": 3.14159,
-  "indexed_array": [
-    "りんご",
-    "バナナ",
-    "チェリー",
-    100,
-    true
+  "MySimpleClassprivateProp": 999,
+  "__class_name": "MySimpleClass",
+  "booleanTrue": true,
+  "customSerializableObj": {
+    "__class_name": "MyCustomSerializable",
+    "n": 777,
+    "s": "オブジェクト内のカスタム"
+  },
+  "floatValue": 45.67,
+  "integerValue": 123,
+  "japaneseString": "これは日本語の文字列です",
+  "nestedArrayData": [
+    "Item A",
+    "Item B",
+    "Item C",
+    10,
+    false
   ],
-  "int_val": 123,
-  "nested_assoc_array": {
-    "details": {
-      "age": 30,
-      "status": "Status:Inactive"
+  "nullValue": null,
+  "parent": null,
+  "publicProp": "Top Level Object",
+  "sharedObjectRef1": {
+    "*protectedProp": {
+      "shared": true
     },
-    "hobbies": [
-      "coding",
-      "reading",
-      "hiking"
-    ],
-    "name": "Go Developer"
+    "MySimpleClassprivateProp": 500,
+    "__class_name": "MySimpleClass",
+    "nestedArrayData": [],
+    "nullValue": null,
+    "parent": null,
+    "publicProp": "共通オブジェクト"
   },
-  "null_val": null,
-  "object_instance": {
-    "*protectedProp": 456,
-    "MyObjectprivateProp": {
-      "key": "value"
-    },
-    "__class_name": "MyObject",
-    "publicProp": "パブリック"
-  },
-  "string_val": "こんにちは、世界！"
+  "sharedObjectRef2": "[[PHP_REFERENCE_DATA: map[*protectedProp:map[shared:true] MySimpleClassprivateProp:500 __class_name:MySimpleClass nestedArrayData:map[] nullValue:\u003cnil\u003e parent:\u003cnil\u003e publicProp:共通オブジェクト]]]",
+  "sharedStringRef1": "共有される文字列データ",
+  "sharedStringRef2": "共有される文字列データ",
+  "statusEnum": "Status:Active",
+  "userRoleEnum": "UserRole:Editor"
 }
 $
 ```
