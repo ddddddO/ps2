@@ -13,12 +13,39 @@ import (
 type phpParser struct {
 	input string
 	pos   int
+
+	nodeIndexer     uint // 各ノードを一意にする識別するための数
+	references      map[int]*ASTNode
+	referenceNumber int
 }
 
 // Creates a new parser instance.
 // 新しいパーサーインスタンスを作成
 func newPhpParser(input string) *phpParser {
-	return &phpParser{input: input, pos: 0}
+	return &phpParser{input: input, pos: 0, references: map[int]*ASTNode{}, referenceNumber: 1}
+}
+
+func (p *phpParser) storeReference(node *ASTNode) bool {
+	if node.Type == "Reference" {
+		return false
+	}
+
+	for _, stored := range p.references {
+		if node.Index == stored.Index {
+			return false
+		}
+	}
+
+	p.references[p.referenceNumber] = node
+	p.referenceNumber++
+	return true
+}
+
+func (p *phpParser) reference(id int) *ASTNode {
+	if ref, ok := p.references[id]; ok {
+		return ref
+	}
+	return nil
 }
 
 // Reads the next character and advances the position.
@@ -58,12 +85,29 @@ func (p *phpParser) expectChar(expected rune) error {
 // Represents a node in the conceptual AST.
 // 概念的なASTのノードを表す構造体
 type ASTNode struct {
+	Index     uint        // ノードの通し番号
 	Type      string      // 例: "array", "object", "string", "int", "bool", "null"
 	Value     interface{} // ノードの実際の値 (文字列、数値、マップ、スライスなど)
 	Children  []*ASTNode  // 子ノード (配列やオブジェクトの場合)
 	Key       interface{} // 親が配列/オブジェクトの場合のキー (string or int)
 	PropName  string      // オブジェクトのプロパティ名の場合
 	ClassName string      // オブジェクトの場合のクラス名
+}
+
+func (p *phpParser) asignNode(typ string, value interface{}) *ASTNode {
+	index := p.nodeIndexer
+	p.nodeIndexer++
+	return &ASTNode{
+		Index: index,
+		Type:  typ,
+		Value: value,
+	}
+}
+
+func (p *phpParser) asignNodeWithClassname(typ string, classname string, value interface{}) *ASTNode {
+	node := p.asignNode(typ, value)
+	node.ClassName = classname
+	return node
 }
 
 // Parses a PHP serialized value based on its type prefix.
@@ -104,14 +148,22 @@ func (p *phpParser) parseValue() (*ASTNode, error) {
 		if err := p.expectChar(':'); err != nil {
 			return nil, err
 		}
-		_, err := p.parseNumberString() // Reference ID
+		referenceID, err := p.parseNumberString() // Reference ID
 		if err != nil {
 			return nil, err
 		}
 		if err := p.expectChar(';'); err != nil {
 			return nil, err
 		}
-		return &ASTNode{Type: "reference", Value: nil}, nil // Placeholder
+
+		t := "reference"
+		if ch == 'R' {
+			t = "Reference"
+		}
+		if ref := p.reference(referenceID); ref != nil {
+			return p.asignNode(t, ref.Value), nil
+		}
+		return p.asignNode(t, nil), nil // Placeholder
 	default:
 		return nil, fmt.Errorf("unknown PHP serialized type '%c' at position %d", ch, p.pos-1)
 	}
@@ -204,7 +256,7 @@ func (p *phpParser) parseString() (*ASTNode, error) {
 		return nil, err
 	}
 
-	return &ASTNode{Type: "string", Value: val}, nil
+	return p.asignNode("string", val), nil
 }
 
 // Parses a PHP serialized integer (e.g., i:V;).
@@ -223,7 +275,7 @@ func (p *phpParser) parseInteger() (*ASTNode, error) {
 	if err := p.expectChar(';'); err != nil {
 		return nil, err
 	}
-	return &ASTNode{Type: "int", Value: val}, nil
+	return p.asignNode("int", val), nil
 }
 
 // Parses a PHP serialized boolean (e.g., b:V;).
@@ -250,7 +302,7 @@ func (p *phpParser) parseBoolean() (*ASTNode, error) {
 	if err := p.expectChar(';'); err != nil {
 		return nil, err
 	}
-	return &ASTNode{Type: "bool", Value: val}, nil
+	return p.asignNode("bool", val), nil
 }
 
 // Parses a PHP serialized null (e.g., N;).
@@ -262,7 +314,7 @@ func (p *phpParser) parseNull() (*ASTNode, error) {
 	if err := p.expectChar(';'); err != nil {
 		return nil, err
 	}
-	return &ASTNode{Type: "null", Value: nil}, nil
+	return p.asignNode("null", nil), nil
 }
 
 // Parses a PHP serialized float (e.g., d:V;).
@@ -291,7 +343,7 @@ func (p *phpParser) parseFloat() (*ASTNode, error) {
 	if err := p.expectChar(';'); err != nil {
 		return nil, err
 	}
-	return &ASTNode{Type: "float", Value: val}, nil
+	return p.asignNode("float", val), nil
 }
 
 // Parses a PHP serialized array (e.g., a:N:{key;value;...}).
@@ -314,7 +366,8 @@ func (p *phpParser) parseArray() (*ASTNode, error) {
 		return nil, err
 	}
 
-	node := &ASTNode{Type: "array", Value: make(map[interface{}]interface{})}
+	node := p.asignNode("array", make(map[interface{}]interface{}))
+	p.storeReference(node)
 	childrenMap := make(map[interface{}]interface{})
 
 	for i := 0; i < size; i++ {
@@ -326,6 +379,7 @@ func (p *phpParser) parseArray() (*ASTNode, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse array value %d: %w", i, err)
 		}
+		p.storeReference(valNode)
 
 		key := keyNode.Value
 		childrenMap[key] = valNode.Value
@@ -390,7 +444,8 @@ func (p *phpParser) parseObject() (*ASTNode, error) {
 		return nil, err
 	}
 
-	node := &ASTNode{Type: "object", ClassName: className, Value: make(map[string]interface{})}
+	node := p.asignNodeWithClassname("object", className, make(map[string]interface{}))
+	p.storeReference(node)
 	propertiesMap := make(map[string]interface{})
 	propertiesMap["__class_name"] = className
 
@@ -426,6 +481,7 @@ func (p *phpParser) parseObject() (*ASTNode, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse object property value %d: %w", i, err)
 		}
+		p.storeReference(propValNode)
 
 		propertiesMap[cleanPropName] = propValNode.Value
 
@@ -486,7 +542,8 @@ func (p *phpParser) parseCustom() (*ASTNode, error) {
 		return nil, err
 	}
 
-	node := &ASTNode{Type: "custom", ClassName: className, Value: make(map[string]interface{})}
+	node := p.asignNodeWithClassname("custom", className, make(map[string]interface{}))
+	p.storeReference(node)
 	propertiesMap := make(map[string]interface{})
 	propertiesMap["__class_name"] = className
 
@@ -522,6 +579,7 @@ func (p *phpParser) parseCustom() (*ASTNode, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse object property value %d: %w", i, err)
 		}
+		p.storeReference(propValNode)
 
 		propertiesMap[cleanPropName] = propValNode.Value
 
@@ -604,5 +662,5 @@ func (p *phpParser) parseEnum() (*ASTNode, error) {
 		return nil, err
 	}
 
-	return &ASTNode{Type: "enum", Value: val}, nil
+	return p.asignNode("enum", val), nil
 }

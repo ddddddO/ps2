@@ -40,9 +40,35 @@ func astNodeToJSONNode(astNode *ASTNode) *JSONNode {
 	case "string", "int", "bool", "null", "float", "enum":
 		// プリミティブ型の場合、Valueを直接設定
 		jsonNode.Value = astNode.Value
-	case "reference":
-		// 参照型は現状ではプレースホルダーとして扱う
-		jsonNode.Value = "[[PHP_REFERENCE_PLACEHOLDER]]"
+	case "reference", "Reference":
+		jsonNode.Value = fmt.Sprintf("[[PHP_REFERENCE_DATA: %+v]]", astNode.Value)
+
+		// FIXME: ちょっとここ大変で、↑みたいにREFERENCEされてたらそのデータを文字列として出すようにした
+
+		// 自己参照型は、それ自身のパースが終わってなくてValueがゼロ値となるよう?で、その場合は自己参照型と見做してプレースホルダを出力
+		// 自己参照型でなく、そもそもValueがゼロ値なreferenceの可能性はあるかもしれないので、プレースホルダと一緒にゼロ値も出力
+		// if astNode.Value == nil {
+		// 	jsonNode.Value = "[[PHP_SELF_REFERENCE or zero value: nil]]"
+		// } else {
+		// 	switch m := astNode.Value.(type) {
+		// 	case map[string]interface{}:
+		// 		if len(m) == 0 {
+		// 			jsonNode.Value = fmt.Sprintf("[[PHP_SELF_REFERENCE or zero value: %+v]]", m)
+		// 		}
+		// 	case string:
+		// 		if len(m) == 0 {
+		// 			jsonNode.Value = fmt.Sprintf("[[PHP_SELF_REFERENCE or zero value: %s]]", m)
+		// 		}
+		// 	case int, float64:
+		// 		if m == 0 {
+		// 			jsonNode.Value = fmt.Sprintf("[[PHP_SELF_REFERENCE or zero value: %d]]", m)
+		// 		}
+		// 	case bool:
+		// 		if !m {
+		// 			jsonNode.Value = fmt.Sprintf("[[PHP_SELF_REFERENCE or zero value: %b]]", m)
+		// 		}
+		// 	}
+		// }
 	case "array":
 		phpMap := astNode.Value.(map[interface{}]interface{})
 
