@@ -8,5 +8,5 @@ func (p *phpParser) parseNull() (*ASTNode, error) {
 	if err := p.expectChar(';'); err != nil {
 		return nil, err
 	}
-	return p.asignNode("null", nil), nil
+	return p.asignNode(ASTNodeTypeNull, nil), nil
 }

@@ -71,5 +71,5 @@ func (p *phpParser) parseString() (*ASTNode, error) {
 		return nil, err
 	}
 
-	return p.asignNode("string", val), nil
+	return p.asignNode(ASTNodeTypeString, val), nil
 }

@@ -47,10 +47,10 @@ func astNodeToJSONNode(astNode *parser.ASTNode) *JSONNode {
 	}
 
 	switch astNode.Type {
-	case "string", "int", "bool", "null", "float", "enum":
+	case parser.ASTNodeTypeString, parser.ASTNodeTypeInt, parser.ASTNodeTypeBool, parser.ASTNodeTypeNull, parser.ASTNodeTypeFloat, parser.ASTNodeTypeEnum:
 		// プリミティブ型の場合、Valueを直接設定
 		jsonNode.Value = astNode.Value
-	case "reference", "Reference":
+	case parser.ASTNodeTypeReference1, parser.ASTNodeTypeReference2:
 		jsonNode.Value = fmt.Sprintf("[[PHP_REFERENCE_DATA: %+v]]", astNode.Value)
 
 		// FIXME: ちょっとここ大変で、↑みたいにREFERENCEされてたらそのデータを文字列として出すようにした
@@ -85,7 +85,7 @@ func astNodeToJSONNode(astNode *parser.ASTNode) *JSONNode {
 		// 		}
 		// 	}
 		// }
-	case "array":
+	case parser.ASTNodeTypeArray:
 		phpMap := astNode.Value.(map[interface{}]interface{})
 
 		// PHP配列が純粋な数値インデックスの連続した配列であるかを判定
@@ -168,7 +168,7 @@ func astNodeToJSONNode(astNode *parser.ASTNode) *JSONNode {
 			}
 			jsonNode.Value = jsonMap
 		}
-	case "object", "custom":
+	case parser.ASTNodeTypeObject, parser.ASTNodeTypeCustom:
 		// オブジェクトの場合、Goのmap[string]interface{}に変換（プロパティ名は既に文字列）
 		phpObjectMap := astNode.Value.(map[string]interface{})
 		jsonMap := make(map[string]interface{})

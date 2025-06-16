@@ -21,7 +21,7 @@ func (p *phpParser) parseArray() (*ASTNode, error) {
 		return nil, err
 	}
 
-	node := p.asignNode("array", make(map[interface{}]interface{}))
+	node := p.asignNode(ASTNodeTypeArray, make(map[interface{}]interface{}))
 	p.references.store(node)
 	childrenMap := make(map[interface{}]interface{})
 

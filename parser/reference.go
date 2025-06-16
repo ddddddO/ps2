@@ -13,7 +13,7 @@ func newReferences() *references {
 }
 
 func (r *references) store(node *ASTNode) bool {
-	if node.Type == "Reference" {
+	if node.Type == ASTNodeTypeReference2 {
 		return false
 	}
 

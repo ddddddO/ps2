@@ -112,3 +112,17 @@ func (p *phpParser) asignNodeWithClassname(typ string, classname string, value i
 	node.ClassName = classname
 	return node
 }
+
+const (
+	ASTNodeTypeString     = "string"
+	ASTNodeTypeInt        = "int"
+	ASTNodeTypeBool       = "bool"
+	ASTNodeTypeNull       = "null"
+	ASTNodeTypeFloat      = "float"
+	ASTNodeTypeEnum       = "enum"
+	ASTNodeTypeReference1 = "reference"
+	ASTNodeTypeReference2 = "Reference"
+	ASTNodeTypeArray      = "array"
+	ASTNodeTypeObject     = "object"
+	ASTNodeTypeCustom     = "custom"
+)

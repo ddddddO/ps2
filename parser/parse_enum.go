@@ -71,5 +71,5 @@ func (p *phpParser) parseEnum() (*ASTNode, error) {
 		return nil, err
 	}
 
-	return p.asignNode("enum", val), nil
+	return p.asignNode(ASTNodeTypeEnum, val), nil
 }

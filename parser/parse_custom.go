@@ -49,7 +49,7 @@ func (p *phpParser) parseCustom() (*ASTNode, error) {
 		return nil, err
 	}
 
-	node := p.asignNodeWithClassname("custom", className, make(map[string]interface{}))
+	node := p.asignNodeWithClassname(ASTNodeTypeCustom, className, make(map[string]interface{}))
 	p.references.store(node)
 	propertiesMap := make(map[string]interface{})
 	propertiesMap["__class_name"] = className

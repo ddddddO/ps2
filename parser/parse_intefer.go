@@ -15,5 +15,5 @@ func (p *phpParser) parseInteger() (*ASTNode, error) {
 	if err := p.expectChar(';'); err != nil {
 		return nil, err
 	}
-	return p.asignNode("int", val), nil
+	return p.asignNode(ASTNodeTypeInt, val), nil
 }

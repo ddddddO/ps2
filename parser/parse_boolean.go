@@ -25,5 +25,5 @@ func (p *phpParser) parseBoolean() (*ASTNode, error) {
 	if err := p.expectChar(';'); err != nil {
 		return nil, err
 	}
-	return p.asignNode("bool", val), nil
+	return p.asignNode(ASTNodeTypeBool, val), nil
 }

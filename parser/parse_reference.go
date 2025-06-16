@@ -15,9 +15,9 @@ func (p *phpParser) parseReference(ch byte) (*ASTNode, error) {
 		return nil, err
 	}
 
-	t := "reference"
+	t := ASTNodeTypeReference1
 	if ch == 'R' {
-		t = "Reference"
+		t = ASTNodeTypeReference2
 	}
 	if ref := p.references.getByID(referenceID); ref != nil {
 		return p.asignNode(t, ref.Value), nil

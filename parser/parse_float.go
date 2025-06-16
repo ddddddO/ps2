@@ -30,5 +30,5 @@ func (p *phpParser) parseFloat() (*ASTNode, error) {
 	if err := p.expectChar(';'); err != nil {
 		return nil, err
 	}
-	return p.asignNode("float", val), nil
+	return p.asignNode(ASTNodeTypeFloat, val), nil
 }
