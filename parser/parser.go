@@ -17,7 +17,7 @@ type phpParser struct {
 }
 
 func New(input string) *phpParser {
-	return &phpParser{input: input, pos: 0, references: newReference()}
+	return &phpParser{input: input, pos: 0, references: newReferences()}
 }
 
 // Reads the next character and advances the position.

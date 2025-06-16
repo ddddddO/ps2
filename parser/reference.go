@@ -5,7 +5,7 @@ type references struct {
 	referenceNumber int
 }
 
-func newReference() *references {
+func newReferences() *references {
 	return &references{
 		nodes:           map[int]*ASTNode{},
 		referenceNumber: 1,
