@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"io"
 	"strings"
+
+	"github.com/ddddddO/ps2/parser"
 )
 
 func Run(input io.Reader) (string, error) {
@@ -18,8 +20,8 @@ func Run(input io.Reader) (string, error) {
 		return "", err
 	}
 
-	parser := newPhpParser(phpSerializedString)
-	rootNode, err := parser.parseValue()
+	parser := parser.New(phpSerializedString)
+	rootNode, err := parser.Parse()
 	if err != nil {
 		return "", err
 	}
