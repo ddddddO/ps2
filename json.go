@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+
+	"github.com/ddddddO/ps2/parser"
 )
 
 // JSON出力用の構造体。ASTNodeの情報をJSONにマッピングする。
@@ -32,7 +34,7 @@ func (j *JSONNode) MarshalJSON() ([]byte, error) {
 // Converts an ASTNode tree to a JSONNode tree.
 // この関数は、ASTNodeの構造をJSONNodeに変換し、特に配列の'Value'フィールドを
 // PHPのjson_encodeの挙動に合わせてJSON配列またはJSONオブジェクトに変換します。
-func astNodeToJSONNode(astNode *ASTNode) *JSONNode {
+func astNodeToJSONNode(astNode *parser.ASTNode) *JSONNode {
 	if astNode == nil {
 		return nil
 	}
@@ -119,7 +121,7 @@ func astNodeToJSONNode(astNode *ASTNode) *JSONNode {
 			jsonArray := make([]interface{}, numKeys)
 			for i := 0; i < numKeys; i++ {
 				// 該当する子ASTNodeを見つけて、その値を再帰的にJSONValueに変換
-				var childAST *ASTNode
+				var childAST *parser.ASTNode
 				for _, child := range astNode.Children {
 					if child.Key != nil {
 						if k, ok := child.Key.(int); ok && k == i {
@@ -151,7 +153,7 @@ func astNodeToJSONNode(astNode *ASTNode) *JSONNode {
 				}
 
 				// 該当する子ASTNodeを見つけて、その値を再帰的にJSONValueに変換
-				var childAST *ASTNode
+				var childAST *parser.ASTNode
 				for _, child := range astNode.Children {
 					if child.Key == k {
 						childAST = child
@@ -174,7 +176,7 @@ func astNodeToJSONNode(astNode *ASTNode) *JSONNode {
 			jsonKey := k // プロパティ名は既に文字列
 
 			// 該当する子ASTNodeを見つけて、その値を再帰的にJSONValueに変換
-			var childAST *ASTNode
+			var childAST *parser.ASTNode
 			for _, child := range astNode.Children {
 				if child.PropName == k {
 					childAST = child
