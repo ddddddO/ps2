@@ -22,7 +22,7 @@ func (p *phpParser) parseArray() (*ASTNode, error) {
 	}
 
 	node := p.asignNode("array", make(map[interface{}]interface{}))
-	p.storeReference(node)
+	p.references.store(node)
 	childrenMap := make(map[interface{}]interface{})
 
 	for i := 0; i < size; i++ {
@@ -34,7 +34,7 @@ func (p *phpParser) parseArray() (*ASTNode, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse array value %d: %w", i, err)
 		}
-		p.storeReference(valNode)
+		p.references.store(valNode)
 
 		key := keyNode.Value
 		childrenMap[key] = valNode.Value

@@ -7,45 +7,20 @@ import (
 )
 
 // Custom parser struct to manage input string and current position.
-// 入力文字列と現在の位置を管理するためのカスタムパーサー構造体
 type phpParser struct {
 	input string
 	pos   int
 
-	nodeIndexer     uint // 各ノードを一意にする識別するための数
-	references      map[int]*ASTNode
-	referenceNumber int
+	nodeIndexer uint // 各ノードを一意にする識別するための数
+
+	references *references
 }
 
 func New(input string) *phpParser {
-	return &phpParser{input: input, pos: 0, references: map[int]*ASTNode{}, referenceNumber: 1}
-}
-
-func (p *phpParser) storeReference(node *ASTNode) bool {
-	if node.Type == "Reference" {
-		return false
-	}
-
-	for _, stored := range p.references {
-		if node.Index == stored.Index {
-			return false
-		}
-	}
-
-	p.references[p.referenceNumber] = node
-	p.referenceNumber++
-	return true
-}
-
-func (p *phpParser) reference(id int) *ASTNode {
-	if ref, ok := p.references[id]; ok {
-		return ref
-	}
-	return nil
+	return &phpParser{input: input, pos: 0, references: newReference()}
 }
 
 // Reads the next character and advances the position.
-// 次の文字を読み込み、位置を進める
 func (p *phpParser) nextChar() (rune, error) {
 	if p.pos >= len(p.input) {
 		return 0, errors.New("unexpected end of input")
@@ -56,7 +31,6 @@ func (p *phpParser) nextChar() (rune, error) {
 }
 
 // Peeks at the next character without advancing the position.
-// 位置を進めずに次の文字を覗き見る
 func (p *phpParser) peekChar() (rune, error) {
 	if p.pos >= len(p.input) {
 		return 0, errors.New("unexpected end of input")
@@ -66,7 +40,6 @@ func (p *phpParser) peekChar() (rune, error) {
 }
 
 // Expects a specific character at the current position.
-// 現在の位置に特定の文字があることを期待
 func (p *phpParser) expectChar(expected rune) error {
 	ch, err := p.nextChar()
 	if err != nil {
@@ -160,7 +133,7 @@ func (p *phpParser) parseValue() (*ASTNode, error) {
 		if ch == 'R' {
 			t = "Reference"
 		}
-		if ref := p.reference(referenceID); ref != nil {
+		if ref := p.references.getByID(referenceID); ref != nil {
 			return p.asignNode(t, ref.Value), nil
 		}
 		return p.asignNode(t, nil), nil // Placeholder

@@ -50,7 +50,7 @@ func (p *phpParser) parseCustom() (*ASTNode, error) {
 	}
 
 	node := p.asignNodeWithClassname("custom", className, make(map[string]interface{}))
-	p.storeReference(node)
+	p.references.store(node)
 	propertiesMap := make(map[string]interface{})
 	propertiesMap["__class_name"] = className
 
@@ -86,7 +86,7 @@ func (p *phpParser) parseCustom() (*ASTNode, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to parse object property value %d: %w", i, err)
 		}
-		p.storeReference(propValNode)
+		p.references.store(propValNode)
 
 		propertiesMap[cleanPropName] = propValNode.Value
 
