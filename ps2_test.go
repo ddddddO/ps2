@@ -50,7 +50,7 @@ func TestRun(t *testing.T) {
 					`"nullValue": null`,
 					`"parent": null`,
 					`"publicProp": "共通オブジェクト"`,
-					`"sharedObjectRef2": "[[PHP_REFERENCE_DATA: map[*protectedProp:map[shared:true] MySimpleClassprivateProp:500 __class_name:MySimpleClass nestedArrayData:map[] nullValue:\u003cnil\u003e parent:\u003cnil\u003e publicProp:共通オブジェクト]]]"`,
+					`"sharedObjectRef2": "[[PHP_REFERENCE_DATA: map[*protectedProp:map[shared:true] MySimpleClassprivateProp:500 __class_name:MySimpleClass nestedArrayData:map[] nullValue:<nil> parent:<nil> publicProp:共通オブジェクト]]]"`,
 					`"sharedStringRef1": "共有される文字列データ"`,
 					`"sharedStringRef2": "共有される文字列データ"`,
 					`"statusEnum": "Status:Active"`,
@@ -210,7 +210,7 @@ func TestRun_parts(t *testing.T) {
 {
   "__class_name": "MyObject",
   "name": "自己参照オブジェクト",
-  "self": "[[MAYBE_PHP_SELF_REFERENCE_DATA]]"
+  "self": "[[MAYBE_PHP_SELF_REFERENCE]]"
 }`,
 		},
 	}

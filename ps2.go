@@ -2,8 +2,10 @@ package ps2
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"io"
+	"strings"
 )
 
 func Run(input io.Reader) (string, error) {
@@ -22,12 +24,15 @@ func Run(input io.Reader) (string, error) {
 		return "", err
 	}
 
+	buf := bytes.Buffer{}
+	encoder := json.NewEncoder(&buf)
+	encoder.SetIndent("", "  ")
+	encoder.SetEscapeHTML(false)
 	jsonRootNode := astNodeToJSONNode(rootNode)
 	// jsonRootNode.Children = nil
-	jsonData, err := json.MarshalIndent(jsonRootNode, "", "  ")
-	if err != nil {
+	if err := encoder.Encode(jsonRootNode); err != nil {
 		return "", err
 	}
 
-	return string(jsonData), nil
+	return strings.TrimSuffix(buf.String(), "\n"), nil
 }

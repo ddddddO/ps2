@@ -29,7 +29,7 @@ Conversion can be done offline as it is processed in Wasm.
 |⭕|`d:3.14`||
 |⭕|`b:0` / `b:1`||
 |⭕|`N`||
-|⭕|`r:1` / `R:1`| filled with `[[PHP_REFERENCE_DATA: <actual referenced unserialized data>]]`<br>or `[[MAYBE_PHP_SELF_REFERENCE_DATA]]` |
+|⭕|`r:1` / `R:1`| filled with `[[PHP_REFERENCE_DATA: <actual referenced unserialized data>]]`<br>or `[[MAYBE_PHP_SELF_REFERENCE]]` |
 |⭕|`O:3:"Obj":2:{...}`||
 |⭕|`C:3:"Csm":2:{...}`||
 
@@ -100,7 +100,7 @@ $ ps2 <<< 'O:13:"MySimpleClass":17:{s:10:"publicProp";s:16:"Top Level Object";s:
     "parent": null,
     "publicProp": "共通オブジェクト"
   },
-  "sharedObjectRef2": "[[PHP_REFERENCE_DATA: map[*protectedProp:map[shared:true] MySimpleClassprivateProp:500 __class_name:MySimpleClass nestedArrayData:map[] nullValue:\u003cnil\u003e parent:\u003cnil\u003e publicProp:共通オブジェクト]]]",
+  "sharedObjectRef2": "[[PHP_REFERENCE_DATA: map[*protectedProp:map[shared:true] MySimpleClassprivateProp:500 __class_name:MySimpleClass nestedArrayData:map[] nullValue:<nil> parent:<nil> publicProp:共通オブジェクト]]]",
   "sharedStringRef1": "共有される文字列データ",
   "sharedStringRef2": "共有される文字列データ",
   "statusEnum": "Status:Active",

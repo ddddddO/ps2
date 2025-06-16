@@ -1,6 +1,7 @@
 package ps2
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"sort"
@@ -18,7 +19,14 @@ type JSONNode struct {
 }
 
 func (j *JSONNode) MarshalJSON() ([]byte, error) {
-	return json.Marshal(j.Value)
+	buf := bytes.Buffer{}
+	encoder := json.NewEncoder(&buf)
+	encoder.SetIndent("", "  ")
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(j.Value); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
 }
 
 // Converts an ASTNode tree to a JSONNode tree.
@@ -51,7 +59,7 @@ func astNodeToJSONNode(astNode *ASTNode) *JSONNode {
 			switch m := astNode.Value.(type) {
 			case map[string]interface{}:
 				if len(m) == 0 {
-					jsonNode.Value = "[[MAYBE_PHP_SELF_REFERENCE_DATA]]"
+					jsonNode.Value = "[[MAYBE_PHP_SELF_REFERENCE]]"
 				}
 			}
 		}
