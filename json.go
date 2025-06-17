@@ -193,12 +193,12 @@ func astNodeToJSONNode(astNode *parser.ASTNode) *JSONNode {
 	}
 
 	// JSONNodeの'Children'フィールドはAST構造そのものを表すため、常に再帰的に構築する
-	if len(astNode.Children) > 0 {
-		jsonNode.Children = make([]*JSONNode, len(astNode.Children))
-		for i, child := range astNode.Children {
-			jsonNode.Children[i] = astNodeToJSONNode(child) // 子ノードのJSONNodeを再帰的に構築
-		}
-	}
+	// if len(astNode.Children) > 0 {
+	// 	jsonNode.Children = make([]*JSONNode, len(astNode.Children))
+	// 	for i, child := range astNode.Children {
+	// 		jsonNode.Children[i] = astNodeToJSONNode(child) // 子ノードのJSONNodeを再帰的に構築
+	// 	}
+	// }
 
 	return jsonNode
 }
