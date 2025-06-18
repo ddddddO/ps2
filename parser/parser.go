@@ -3,6 +3,7 @@ package parser
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"unicode/utf8"
 )
 
@@ -82,6 +83,18 @@ func (p *phpParser) expectChar(expected rune) error {
 	}
 	if ch != expected {
 		return fmt.Errorf("expected '%c', but got '%c' at position %d", expected, ch, p.pos-1)
+	}
+	return nil
+}
+
+func (p *phpParser) expectChars(expecteds ...rune) error {
+	ch, err := p.nextChar()
+	if err != nil {
+		return err
+	}
+
+	if !slices.Contains(expecteds, ch) {
+		return fmt.Errorf("expected '%c', but got '%c' at position %d", expecteds, ch, p.pos-1)
 	}
 	return nil
 }

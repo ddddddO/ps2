@@ -1,7 +1,7 @@
 package parser
 
 func (p *phpParser) parseReference(ch byte) (*ASTNode, error) {
-	if _, err := p.nextChar(); err != nil {
+	if err := p.expectChars('R', 'r'); err != nil {
 		return nil, err
 	}
 	if err := p.expectChar(':'); err != nil {
