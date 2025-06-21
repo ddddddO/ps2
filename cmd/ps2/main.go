@@ -14,6 +14,10 @@ const (
 )
 
 func main() {
+	var toJSON, toYAML, toTOML bool
+	flag.BoolVar(&toJSON, "json", true, "convert to JSON")
+	flag.BoolVar(&toYAML, "yaml", false, "convert to YAML")
+	flag.BoolVar(&toTOML, "toml", false, "convert to TOML")
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s is: %s\n", os.Args[0], base)
 		fmt.Fprintf(os.Stderr, "Here's a quick example you can try:\n\n")
@@ -22,7 +26,15 @@ func main() {
 	}
 	flag.Parse()
 
-	output, err := ps2.Run(os.Stdin)
+	optionOfOutputType := ps2.WithOutputTypeJSON()
+	if toYAML {
+		optionOfOutputType = ps2.WithOutputTypeYAML()
+	}
+	if toTOML {
+		optionOfOutputType = ps2.WithOutputTypeTOML()
+	}
+
+	output, err := ps2.Run(os.Stdin, optionOfOutputType)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
