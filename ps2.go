@@ -53,6 +53,8 @@ func Run(input io.Reader, options ...Option) (string, error) {
 		d := json.NewDecoder(&buf)
 		buf2 := bytes.Buffer{}
 		e := toml.NewEncoder(&buf2)
+		d.UseNumber()
+		e.SetMarshalJsonNumbers(true)
 		var v interface{}
 		if err := d.Decode(&v); err != nil {
 			return "", err
