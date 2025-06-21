@@ -13,6 +13,16 @@ const callPS2 = () => {
     ps2Run();
 };
 
+const getOutputType = () => {
+  const elms = document.getElementsByName("output_type");
+  elms.forEach((elm) => {
+    if (elm.checked) {
+      console.debug('👺<checked! ');
+      console.dir(elm, {depth: null})
+    }
+  })
+}
+
 const clearInput = () => {
   document.getElementById("input").value = "";
 };

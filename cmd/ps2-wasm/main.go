@@ -24,7 +24,26 @@ func ps2Run(this js.Value, args []js.Value) interface{} {
 	getElementByID := getElementByIDFunc(document)
 
 	input := getElementByID("input").Get("value").String()
-	output, err := ps2.Run(strings.NewReader(input))
+
+	outputOfOption := ps2.WithOutputTypeJSON()
+	outputRadios := getElementsByNameFunc(document)("output_type")
+	for i := 0; i < outputRadios.Length(); i++ {
+		radio := outputRadios.Index(i)
+		if radio.Get("checked").Bool() {
+			switch radio.Get("value").String() {
+			case "json":
+				outputOfOption = ps2.WithOutputTypeJSON()
+			case "yaml":
+				outputOfOption = ps2.WithOutputTypeYAML()
+			case "toml":
+				outputOfOption = ps2.WithOutputTypeTOML()
+			default:
+				outputOfOption = ps2.WithOutputTypeJSON()
+			}
+		}
+	}
+
+	output, err := ps2.Run(strings.NewReader(input), outputOfOption)
 	if err != nil {
 		alert(err.Error())
 		return nil
@@ -47,6 +66,12 @@ func ps2Run(this js.Value, args []js.Value) interface{} {
 func getElementByIDFunc(document js.Value) func(id string) js.Value {
 	return func(id string) js.Value {
 		return document.Call("getElementById", id)
+	}
+}
+
+func getElementsByNameFunc(document js.Value) func(id string) js.Value {
+	return func(id string) js.Value {
+		return document.Call("getElementsByName", id)
 	}
 }
 

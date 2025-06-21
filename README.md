@@ -5,14 +5,14 @@
 [![ci](https://github.com/ddddddO/ps2/actions/workflows/ci.yaml/badge.svg)](https://github.com/ddddddO/ps2/actions/workflows/ci.yaml)
 
 
-**phP Serialize() To xxxx (e.g. JSON)**
+**phP Serialize() To {JSON|YAML|TOML}**
 
 Web and CLI tool are available!</br>
 
 > [!WARNING]
 > Use it for easy human checking.
 
-Converts data serialized by the PHP serialize function into some format (only JSON for now).</br>
+Converts data serialized by the PHP serialize function into some format (JSON or YAML or TOML for now).</br>
 This may be useful if you want to convert the payload string stored in the Laravel job queue 👍 </br>
 If you find a bug or have a request, please create issue or Pull Request!
 
