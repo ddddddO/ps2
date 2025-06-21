@@ -55,7 +55,6 @@ func astNodeToJSONNode(astNode *parser.ASTNode) *JSONNode {
 
 		// FIXME: ちょっとここ大変で、↑みたいにREFERENCEされてたらそのデータを文字列として出すようにした
 
-		// 自己参照型は、それ自身のパースが終わってなくてValueがゼロ値となるよう?で、その場合は自己参照型と見做してプレースホルダを出力
 		// 自己参照型でなく、そもそもValueがゼロ値なreferenceの可能性はあるかもしれない
 		if astNode.Value != nil {
 			switch m := astNode.Value.(type) {

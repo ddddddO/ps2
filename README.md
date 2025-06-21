@@ -109,6 +109,14 @@ $ ps2 <<< 'O:13:"MySimpleClass":17:{s:10:"publicProp";s:16:"Top Level Object";s:
 $
 ```
 
+### Output Types
+- `--json`
+  - Default. Convert to JSON.
+- `--yaml`
+  - Convert to YAML.
+- `--toml`
+  - Convert to TOML.
+
 ## Related tool
 - **[PHP Serialized Object viewer](https://github.com/haradakunihiko/intellij-plugin-php-serialized-object-viewer)**
     - If you are using IntelliJ IDEA / PhpStorm, please try this plugin!
