@@ -13,7 +13,7 @@ func TestRun(t *testing.T) {
 		want       func(json string) (bool, string)
 	}{
 		"object(include various types)": {
-			serialized: `O:13:"MySimpleClass":17:{s:10:"publicProp";s:16:"Top Level Object";s:26:"MySimpleClassprivateProp";i:999;s:16:"*protectedProp";a:3:{s:10:"assoc_key1";s:12:"assoc_value1";s:10:"assoc_key2";i:789;s:17:"deep_nested_array";a:2:{s:9:"sub_key_x";s:11:"sub_value_x";s:9:"sub_key_y";d:12.34;}}s:6:"parent";N;s:15:"nestedArrayData";a:5:{i:0;s:6:"Item A";i:1;s:6:"Item B";i:2;s:6:"Item C";i:3;i:10;i:4;b:0;}s:16:"sharedStringRef1";s:33:"共有される文字列データ";s:16:"sharedStringRef2";s:33:"共有される文字列データ";s:16:"sharedObjectRef1";O:13:"MySimpleClass":6:{s:10:"publicProp";s:24:"共通オブジェクト";s:26:"MySimpleClassprivateProp";i:500;s:16:"*protectedProp";a:1:{s:6:"shared";b:1;}s:6:"parent";N;s:15:"nestedArrayData";a:0:{}s:9:"nullValue";N;}s:16:"sharedObjectRef2";r:19;s:21:"customSerializableObj";O:20:"MyCustomSerializable":2:{s:1:"s";s:36:"オブジェクト内のカスタム";s:1:"n";i:777;}s:12:"userRoleEnum";E:15:"UserRole:Editor";s:10:"statusEnum";E:13:"Status:Active";s:9:"nullValue";N;s:11:"booleanTrue";b:1;s:10:"floatValue";d:45.67;s:12:"integerValue";i:123;s:14:"japaneseString";s:36:"これは日本語の文字列です";}`,
+			serialized: `O:13:"MySimpleClass":17:{s:10:"publicProp";s:16:"Top Level Object";s:26:"MySimpleClassprivateProp";i:999;s:16:"*protectedProp";a:3:{s:10:"assoc_key1";s:12:"assoc_value1";s:10:"assoc_key2";i:789;s:17:"deep_nested_array";a:2:{s:9:"sub_key_x";s:11:"sub_value_x";s:9:"sub_key_y";d:12.34;}}s:6:"parent";N;s:15:"nestedArrayData";a:5:{i:0;s:6:"Item A";i:1;s:6:"Item B";i:2;s:6:"Item C";i:3;i:10;i:4;b:0;}s:16:"sharedStringRef1";s:33:"共有される文字列データ";s:16:"sharedStringRef2";R:17;s:16:"sharedObjectRef1";O:13:"MySimpleClass":6:{s:10:"publicProp";s:24:"共通オブジェクト";s:26:"MySimpleClassprivateProp";i:500;s:16:"*protectedProp";a:1:{s:6:"shared";b:1;}s:6:"parent";N;s:15:"nestedArrayData";a:0:{}s:9:"nullValue";N;}s:16:"sharedObjectRef2";r:18;s:21:"customSerializableObj";O:20:"MyCustomSerializable":2:{s:1:"s";s:36:"オブジェクト内のカスタム";s:1:"n";i:777;}s:12:"userRoleEnum";E:15:"UserRole:Editor";s:10:"statusEnum";E:13:"Status:Active";s:9:"nullValue";N;s:11:"booleanTrue";b:1;s:10:"floatValue";d:45.67;s:12:"integerValue";i:123;s:14:"japaneseString";s:36:"これは日本語の文字列です";}`,
 			want: func(json string) (bool, string) {
 				wants := []string{
 					`"*protectedProp": {`,
@@ -52,7 +52,7 @@ func TestRun(t *testing.T) {
 					`"publicProp": "共通オブジェクト"`,
 					`"sharedObjectRef2": "[[PHP_REFERENCE_DATA: map[*protectedProp:map[shared:true] MySimpleClassprivateProp:500 __class_name:MySimpleClass nestedArrayData:map[] nullValue:<nil> parent:<nil> publicProp:共通オブジェクト]]]"`,
 					`"sharedStringRef1": "共有される文字列データ"`,
-					`"sharedStringRef2": "共有される文字列データ"`,
+					`"sharedStringRef2": "[[PHP_REFERENCE_DATA: 共有される文字列データ]]"`,
 					`"statusEnum": "Status:Active"`,
 					`"userRoleEnum": "UserRole:Editor"`,
 				}
@@ -203,7 +203,16 @@ func TestRun_parts(t *testing.T) {
   "second_obj": "[[PHP_REFERENCE_DATA: map[__class_name:SimpleObject name:Object A]]]"
 }`,
 		},
-		// TODO: "reference(value)" のケース
+		"reference(value)": {
+			serialized: `a:4:{s:13:"sharedString1";s:33:"共有される文字列データ";s:13:"sharedString2";R:2;s:6:"number";i:555;s:13:"sharedString3";R:2;}`,
+			want: `
+{
+  "number": 555,
+  "sharedString1": "共有される文字列データ",
+  "sharedString2": "[[PHP_REFERENCE_DATA: 共有される文字列データ]]",
+  "sharedString3": "[[PHP_REFERENCE_DATA: 共有される文字列データ]]"
+}`,
+		},
 		"reference(self)": {
 			serialized: `O:8:"MyObject":2:{s:4:"name";s:30:"自己参照オブジェクト";s:4:"self";r:1;}`,
 			want: `
@@ -358,23 +367,15 @@ $topLevelObject->nestedArrayData = [
     false,
 ];
 
-// 3. 連想配列 (Associative Array)
-// $topLevelObject->protectedProp = [ // protectedProp を再利用して連想配列を入れる
-//     'assoc_key1' => 'assoc_value1',
-//     'assoc_key2' => 789,
-//     'deep_nested_array' => [
-//         'sub_key_x' => 'sub_value_x',
-//         'sub_key_y' => 12.34,
-//     ],
-// ];
+// 3. 連想配列 (Associative Array) - new MySimpleClassの第三引数で指定
 
 // 4. オブジェクト参照 (r:) - 別のオブジェクトへの参照
 $topLevelObject->sharedObjectRef1 = $commonObject;
 $topLevelObject->sharedObjectRef2 = $commonObject; // 同じオブジェクトへの参照
 
 // 5. 値参照 (R:) - 同じ文字列への参照
-$topLevelObject->sharedStringRef1 = $commonString;
-$topLevelObject->sharedStringRef2 = $commonString; // 同じ文字列への参照
+$topLevelObject->sharedStringRef1 = &$commonString;
+$topLevelObject->sharedStringRef2 = &$commonString; // 同じ文字列への参照
 
 // 6. Enum (PHP 8.1+ の場合)
 $topLevelObject->userRoleEnum = UserRole::Editor;

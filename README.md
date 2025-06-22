@@ -55,10 +55,15 @@ Format:
 $ ps2 <<< '< Data serialized by PHP serialize function >'
 ```
 
-Example:
+Example serialized data:
+```console
+O:13:"MySimpleClass":17:{s:10:"publicProp";s:16:"Top Level Object";s:26:"MySimpleClassprivateProp";i:999;s:16:"*protectedProp";a:3:{s:10:"assoc_key1";s:12:"assoc_value1";s:10:"assoc_key2";i:789;s:17:"deep_nested_array";a:2:{s:9:"sub_key_x";s:11:"sub_value_x";s:9:"sub_key_y";d:12.34;}}s:6:"parent";N;s:15:"nestedArrayData";a:5:{i:0;s:6:"Item A";i:1;s:6:"Item B";i:2;s:6:"Item C";i:3;i:10;i:4;b:0;}s:16:"sharedStringRef1";s:33:"共有される文字列データ";s:16:"sharedStringRef2";R:17;s:16:"sharedObjectRef1";O:13:"MySimpleClass":6:{s:10:"publicProp";s:24:"共通オブジェクト";s:26:"MySimpleClassprivateProp";i:500;s:16:"*protectedProp";a:1:{s:6:"shared";b:1;}s:6:"parent";N;s:15:"nestedArrayData";a:0:{}s:9:"nullValue";N;}s:16:"sharedObjectRef2";r:18;s:21:"customSerializableObj";O:20:"MyCustomSerializable":2:{s:1:"s";s:36:"オブジェクト内のカスタム";s:1:"n";i:777;}s:12:"userRoleEnum";E:15:"UserRole:Editor";s:10:"statusEnum";E:13:"Status:Active";s:9:"nullValue";N;s:11:"booleanTrue";b:1;s:10:"floatValue";d:45.67;s:12:"integerValue";i:123;s:14:"japaneseString";s:36:"これは日本語の文字列です";}
+```
+
+Example execution:
 
 ```console
-$ ps2 <<< 'O:13:"MySimpleClass":17:{s:10:"publicProp";s:16:"Top Level Object";s:26:"MySimpleClassprivateProp";i:999;s:16:"*protectedProp";a:3:{s:10:"assoc_key1";s:12:"assoc_value1";s:10:"assoc_key2";i:789;s:17:"deep_nested_array";a:2:{s:9:"sub_key_x";s:11:"sub_value_x";s:9:"sub_key_y";d:12.34;}}s:6:"parent";N;s:15:"nestedArrayData";a:5:{i:0;s:6:"Item A";i:1;s:6:"Item B";i:2;s:6:"Item C";i:3;i:10;i:4;b:0;}s:16:"sharedStringRef1";s:33:"共有される文字列データ";s:16:"sharedStringRef2";s:33:"共有される文字列データ";s:16:"sharedObjectRef1";O:13:"MySimpleClass":6:{s:10:"publicProp";s:24:"共通オブジェクト";s:26:"MySimpleClassprivateProp";i:500;s:16:"*protectedProp";a:1:{s:6:"shared";b:1;}s:6:"parent";N;s:15:"nestedArrayData";a:0:{}s:9:"nullValue";N;}s:16:"sharedObjectRef2";r:19;s:21:"customSerializableObj";O:20:"MyCustomSerializable":2:{s:1:"s";s:36:"オブジェクト内のカスタム";s:1:"n";i:777;}s:12:"userRoleEnum";E:15:"UserRole:Editor";s:10:"statusEnum";E:13:"Status:Active";s:9:"nullValue";N;s:11:"booleanTrue";b:1;s:10:"floatValue";d:45.67;s:12:"integerValue";i:123;s:14:"japaneseString";s:36:"これは日本語の文字列です";}'
+$ ps2 <<< 'O:13:"MySimpleClass":17:{s:10:"publicProp";s:16:"Top Level Object";s:26:"MySimpleClassprivateProp";i:999;s:16:"*protectedProp";a:3:{s:10:"assoc_key1";s:12:"assoc_value1";s:10:"assoc_key2";i:789;s:17:"deep_nested_array";a:2:{s:9:"sub_key_x";s:11:"sub_value_x";s:9:"sub_key_y";d:12.34;}}s:6:"parent";N;s:15:"nestedArrayData";a:5:{i:0;s:6:"Item A";i:1;s:6:"Item B";i:2;s:6:"Item C";i:3;i:10;i:4;b:0;}s:16:"sharedStringRef1";s:33:"共有される文字列データ";s:16:"sharedStringRef2";R:17;s:16:"sharedObjectRef1";O:13:"MySimpleClass":6:{s:10:"publicProp";s:24:"共通オブジェクト";s:26:"MySimpleClassprivateProp";i:500;s:16:"*protectedProp";a:1:{s:6:"shared";b:1;}s:6:"parent";N;s:15:"nestedArrayData";a:0:{}s:9:"nullValue";N;}s:16:"sharedObjectRef2";r:18;s:21:"customSerializableObj";O:20:"MyCustomSerializable":2:{s:1:"s";s:36:"オブジェクト内のカスタム";s:1:"n";i:777;}s:12:"userRoleEnum";E:15:"UserRole:Editor";s:10:"statusEnum";E:13:"Status:Active";s:9:"nullValue";N;s:11:"booleanTrue";b:1;s:10:"floatValue";d:45.67;s:12:"integerValue";i:123;s:14:"japaneseString";s:36:"これは日本語の文字列です";}'
 {
   "*protectedProp": {
     "assoc_key1": "assoc_value1",
@@ -102,7 +107,7 @@ $ ps2 <<< 'O:13:"MySimpleClass":17:{s:10:"publicProp";s:16:"Top Level Object";s:
   },
   "sharedObjectRef2": "[[PHP_REFERENCE_DATA: map[*protectedProp:map[shared:true] MySimpleClassprivateProp:500 __class_name:MySimpleClass nestedArrayData:map[] nullValue:<nil> parent:<nil> publicProp:共通オブジェクト]]]",
   "sharedStringRef1": "共有される文字列データ",
-  "sharedStringRef2": "共有される文字列データ",
+  "sharedStringRef2": "[[PHP_REFERENCE_DATA: 共有される文字列データ]]",
   "statusEnum": "Status:Active",
   "userRoleEnum": "UserRole:Editor"
 }
