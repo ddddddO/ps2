@@ -48,12 +48,12 @@ go install github.com/ddddddO/ps2/cmd/ps2@latest
 
 ## Usage
 
-- ※ `echo 'O:13:"App\UpdateJob....' | ps2` みたいに echo でやると、`\U`が削られる可能性があるため、`<<<` か `printf` 推奨
-
 Format:
 ```console
 $ ps2 <<< '< Data serialized by PHP serialize function >'
 ```
+
+- Use `<<<` or `printf` to pass serialized data to stdin, since using echo as in `echo 'O:13:"App\UpdateJob....' | ps2` may cut off the `\U` part.
 
 Example serialized data:
 ```console
@@ -134,6 +134,7 @@ $
     ```
 
     - 一発で動かない & 微調整の必要があったため手を入れている
+      - 継続して手を入れ続けている
     - 生成されたコードは「Go言語でつくるインタプリタ」の内容にかなり似ている
 
 - PHP serialize()
